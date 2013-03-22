@@ -1,0 +1,30 @@
+---
+# The `rubicon` namespace holds core Rubicon configuration
+:rubicon:
+    # Where to save logs to
+    :log_file: rubicon.log
+
+    # The log level represents the verbosity of the application.
+    # A lower value will print out more information, (i.e. level 2
+    # will also print out any information in levels 3, 4, and 5)
+    #
+    # 0 will print out a lot of debug info
+    # 1 will print out useful information
+    # 2 will print warnings
+    # 3 will print errors
+    # 4 will print FATAL errors (those causing shutdown)
+    # 5 will print out any information that transcends the
+    #   space-time continuum
+    #
+    # It is recommended to leave this value at 1
+    :log_level: 1
+
+    # The IP address or hostname of your RCON server.
+    :server: 0.0.0.0
+
+    # The port on which your RCON server is awaiting connections.
+    :port: 12345
+
+    # The password to your RCON server.
+    :password: yourpasswordhere
+
