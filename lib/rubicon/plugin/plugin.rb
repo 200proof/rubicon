@@ -1,0 +1,3 @@
+module Rubicon::Plugin
+    
+end

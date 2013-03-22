@@ -34,6 +34,7 @@ module Rubicon::Frostbite
             @type == :response
         end
 
+        # Encodes a packet to be sent to the RCON server
         def encode
             encoded_sequence    = encode_sequence
             encoded_words       = encode_words
@@ -52,6 +53,7 @@ module Rubicon::Frostbite
             ret
         end
 
+        # super pretty print power!
         def inspect
             "#{@origin} #{@type.to_s.ljust(8, ' ')} ##{@sequence.to_s.rjust(10, "0")} #{words}"
         end

@@ -1,18 +1,39 @@
 module Rubicon::Frostbite
     class RconClient < EventMachine::Connection
-        @@logger = Rubicon.logger("RconClient")
+        def self.game_handlers
+            @@game_handlers ||= {}
+        end
+
+        attr_accessor :message_channel
 
         def initialize(password)
             super
 
-            @buffer = []
-            @packet_queue = []
+            @logger = Rubicon.logger("RconClient")
+            p @logger
+
             @password = password
-            @requests_sent, @responses_received = 0, 0
+            @active_promises = {}
+            @buffer = []
+            @last_sent_sequence = 0
+            @message_channel = Thread::Channel.new
         end
 
         def connection_completed
-            send_first_packet RconPacket.new(1, :client, :request, "version")
+            Thread.new do
+                lambda do 
+                    response = send_request("version")
+                    server_game = response.words[1]
+                    if(@@game_handlers[server_game])
+                        @game_handler = @@game_handlers[server_game].new(self, @password)
+                        @game_handler.connected
+                        @game_handler.start_event_pump
+                    else
+                        @logger.fatal("No game handler for \"#{server_game}\"! Shutting down")
+                        close_connection
+                    end
+                end.call
+            end
         end
 
         def receive_data(data)
@@ -21,32 +42,35 @@ module Rubicon::Frostbite
             parse_packets
         end
 
-        def send_packet(packet)
-            @packet_queue << packet
+        # Used to send a command the server.
+        # This should be used when a reply from the server is irrelevant to
+        # the continuation of the flow of execution 
+        def send_command(*words)
+            _, packet = build_packet(words)
+            dispatch_packet(packet)
+        end
 
-            # if there's nothing in the queue, send the packet right away instead 
-            # of waiting for a receive which may potentially never actually happen
-            send_next_packet unless awaiting_response?
+        # Used to send a request to the server, whose reply is required
+        # to continue the flow of execution
+        def send_request(*words)
+            sequence, packet = build_packet(words)
+
+            ret_promise = promise
+            @active_promises[sequence] = ret_promise
+            dispatch_packet(packet)
+
+            ~ret_promise
         end
 
     private
-        def send_first_packet(p)
-            @@logger.debug { "<-SEND-  #{p.inspect}" }
-
-            @requests_sent += 1 if p.type == :request
-
-            send_data p.encode
+        def build_packet(words)
+            @last_sent_sequence += 1
+            [@last_sent_sequence, RconPacket.new(@last_sent_sequence, :client, :request, *words)]
         end
 
-        def send_next_packet
-            p = @packet_queue.shift
-
-            return if p.nil?
-
-            @requests_sent += 1 if p.type == :request
-
-            @@logger.debug { "<-SEND-  #{p.inspect}" }
-            send_data p.encode
+        def dispatch_packet(packet)
+            @logger.debug { "<-SEND-  #{packet.inspect}" }
+            send_data packet.encode
         end
 
         def awaiting_response?
@@ -88,18 +112,23 @@ module Rubicon::Frostbite
                     words << word
                 end
 
-                @@logger.debug { " -RECV-> #{RconPacket.new(sequence, origin, type, *words).inspect}" }
+                received_packet = RconPacket.new(sequence, origin, type, *words)
 
-                @responses_received += 1 if type == :response
+                @logger.debug { " -RECV-> #{received_packet.inspect}" }
 
                 # All requests need to be acknowledged with a response
-                send_packet RconPacket.new(sequence, origin, :response, "OK") if type == :request
+                dispatch_packet RconPacket.new(sequence, origin, :response, "OK") if type == :request
+
+                if (type == :response) && (@active_promises[sequence])
+                    @active_promises[sequence] << received_packet
+                end
+
+                if (type == :request) && (origin == :server)
+                    @message_channel.send received_packet
+                end
 
                 # pop the total bytes read out of the buffer
                 @buffer.shift total_size
-
-                # send the next packet in queue (this dummy might disconnect if packets are sent out of sequence)
-                send_next_packet
             end
         end
     end

@@ -1,6 +1,9 @@
 require "eventmachine"
 require "logger"
 
+require "thread/channel"
+require "thread/promise"
+
 require "rubicon/version"
 
 require "rubicon/util/method_delegator"
@@ -13,5 +16,10 @@ module Rubicon
     def self.bootstrap!
         require "rubicon/frostbite/rcon_packet"
         require "rubicon/frostbite/rcon_client"
+
+        require "rubicon/frostbite/bf3/server.rb"
+        require "rubicon/frostbite/bf3/player.rb"
+        require "rubicon/frostbite/bf3/team.rb"
+        require "rubicon/frostbite/bf3/squad.rb"
     end
 end
