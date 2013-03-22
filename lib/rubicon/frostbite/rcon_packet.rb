@@ -16,22 +16,84 @@ module Rubicon::Frostbite
             @origin     = origin
             @type       = type
             @words      = words
+
+            if (type == :response)
+                @response = words[0]
+            end
         end
 
+        # Whether or not this the original request that resulted in this packet
+        # originated on the server
         def from_server?
             @origin == :server
         end
 
+        # Whether or not this the original request that resulted in this packet
+        # originated on the client
         def from_client?
             @origin == :client
         end
 
+        # Whether or not this packet is a request
         def request?
             @type == :request
         end
 
+        # Whether or not this packet is a response
         def response?
             @type == :response
+        end
+
+        # If this packet is a response, return the response
+        # status, otherwise nil
+        def response
+            @response
+        end
+
+        # Reads the next word in this packet
+        # NOTE: this modifies the packet
+        def read_word
+            @words.shift
+        end
+
+        # Reads a player info block
+        # NOTE: this modifies the packet
+        def read_player_info_block
+            keys, ret = [], []
+
+            key_count = read_word.to_i
+            key_count.times { keys << read_word}
+
+            value_count = read_word.to_i
+
+            value_count.times do
+                current_player = {}
+                key_count.times do |idx|
+                    current_player[keys[idx]] = read_word
+                end
+
+                ret << current_player
+            end
+
+            ret
+        end
+
+        # Reads a "Team Scores" block
+        # NOTE: this modifies the packet
+        # Returns [[team scores], target]
+        def read_team_scores
+            ret = []
+            num_entries = read_word.to_i
+            num_entries.times do
+                ret << read_word.to_i
+            end
+            [ret, read_word.to_i]
+        end
+
+        # Reads a boolean value
+        # NOTE: this modifies the packet
+        def read_bool
+            read_word == "true"
         end
 
         # Encodes a packet to be sent to the RCON server

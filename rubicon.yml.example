@@ -28,3 +28,6 @@
     # The password to your RCON server.
     :password: yourpasswordhere
 
+    # Highly recommended to leave this unchanged, unless you're
+    # using different plugin sets for different servers
+    :plugins_dir: plugins

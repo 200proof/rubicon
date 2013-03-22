@@ -7,6 +7,7 @@ module Rubicon::Util
 
             log_file = File.open(log_filename, "a+")
             @logger = ::Logger.new(MethodDelegator.delegate(:write, :close).to(STDOUT, log_file))
+            @logger.level = level
             @logger.formatter = proc do |level, datetime, progname, msg|
                 progname ||= ""
                 "[#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(10)+" " if !progname.empty?} #{msg}\n"

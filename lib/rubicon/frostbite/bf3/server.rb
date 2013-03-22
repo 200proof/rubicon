@@ -1,25 +1,81 @@
+require "digest/md5"
+
 module Rubicon::Frostbite::BF3
     class Server
+        require 'rubicon/frostbite/bf3/signal_handlers'
+        require 'rubicon/frostbite/bf3/packet_handlers'
+
+        attr_reader :connection
+        attr_accessor :name, :players, :max_players, :game_mode,
+            :current_map, :rounds_played, :rounds_total, :scores,
+            :score_target, :online_state, :ranked, :punkbuster,
+            :has_password, :uptime, :round_time, :ip,
+            :punkbuster_version, :join_queue, :region,
+            :closest_ping_site, :country, :matchmaking, :players,
+            :teams
+
         def initialize(connection, password)
             @connection = connection
             @password = password
             @logger = Rubicon.logger("BF3Server")
-
-            p @logger
         end
 
+        # Called when successfully connected to a BF3 RCON server
         def connected
             @logger.debug { "Connected to a BF3 server!" }
-            @connection.send_request("login.plainText", @password)
-            @connection.send_command("admin.eventsEnabled", "true")
+
+            process_signal(:refresh_server_info)
+
+            @logger.info { "Connected to #{@name}!" }
+
+            if !attempt_login
+                @logger.fatal { "Failed to log in!" }
+                @connection.close
+            end
+
+            @connection.send_command "admin.eventsEnabled", "true"
         end
 
+        # Attempts to log in using a hashed password
+        def attempt_login
+            salt_packet = @connection.send_request("login.hashed")
+            
+            salt = salt_packet.words[1]
+            result = @connection.send_request("login.hashed", hash_password(salt))
+
+            result.response == "OK"
+        end
+
+        # Hashes a password given a HexString-encoded salt
+        def hash_password(salt)
+            salt = [salt].pack("H*")
+            salted_password = salt + @password
+            Digest::MD5.hexdigest(salted_password).upcase
+        end
+
+        # Loops until a :disconnect is passed as a message via
+        # the message channel created by the connection
         def start_event_pump
             while message = @connection.message_channel.receive
-                @logger.debug { message.words.inspect }
+                if (message.is_a? Rubicon::Frostbite::RconPacket)
+                    process_packet(message)
+                elsif (message.is_a? Symbol)
+                    process_signal(message)
+                else
+                    @logger.warn("Discarding unknown message: #{message}")
+                end
             end
+        end
+
+        def process_signal(signal)
+            @@signal_handlers[signal].call(self) rescue @logger.warn { "No handler for signal #{signal}" }
+        end
+
+        def process_packet(packet)
+            @@packet_handlers[packet.words[0]].call(self, packet) rescue @logger.warn { "No handler for packet #{packet.words[0]}" }
         end     
     end
 
+    # Registers our server state manager
     Rubicon::Frostbite::RconClient::game_handlers["BF3"] = Server
 end

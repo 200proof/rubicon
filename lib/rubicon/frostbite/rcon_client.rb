@@ -10,7 +10,6 @@ module Rubicon::Frostbite
             super
 
             @logger = Rubicon.logger("RconClient")
-            p @logger
 
             @password = password
             @active_promises = {}
@@ -21,7 +20,7 @@ module Rubicon::Frostbite
 
         def connection_completed
             Thread.new do
-                lambda do 
+                begin
                     response = send_request("version")
                     server_game = response.words[1]
                     if(@@game_handlers[server_game])
@@ -32,7 +31,10 @@ module Rubicon::Frostbite
                         @logger.fatal("No game handler for \"#{server_game}\"! Shutting down")
                         close_connection
                     end
-                end.call
+                rescue Exception => e
+                    Rubicon.logger("HandlerThread").error "Exception during event: #{e.message} (#{e.class})"
+                    Rubicon.logger("HandlerThread").error (e.backtrace || [])[0..10].join("\n")
+                end
             end
         end
 
@@ -119,7 +121,7 @@ module Rubicon::Frostbite
                 # All requests need to be acknowledged with a response
                 dispatch_packet RconPacket.new(sequence, origin, :response, "OK") if type == :request
 
-                if (type == :response) && (@active_promises[sequence])
+                if (@active_promises[sequence])
                     @active_promises[sequence] << received_packet
                 end
 

@@ -14,6 +14,9 @@ require "rubicon/application"
 # This includes anything that uses a logger.
 module Rubicon
     def self.bootstrap!
+        require "rubicon/plugin/plugin_manager"
+        require "rubicon/plugin/plugin"
+
         require "rubicon/frostbite/rcon_packet"
         require "rubicon/frostbite/rcon_client"
 

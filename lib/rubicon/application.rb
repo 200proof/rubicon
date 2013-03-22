@@ -7,10 +7,17 @@ module Rubicon
     def self.start!(config)
         @@config = config
         bootstrap!
-        logger.info("Starting Rubicon version #{VERSION}")
-        logger.info("Loaded config from #{config[:config_file]}")
+        logger("Rubicon").info("Starting Rubicon version #{VERSION}")
+        logger("Rubicon").info("Loaded config from #{config[:config_file]}")
+
+        @@plugin_manager = PluginManager.new(config[:rubicon][:plugins_dir])
 
         EventMachine.run do
+            EventMachine.error_handler do |e|
+                logger("EM").error "Exception during event: #{e.message} (#{e.class})"
+                logger("EM").error (e.backtrace || [])[0..10].join("\n")
+            end
+
             EventMachine.connect config[:rubicon][:server], config[:rubicon][:port], Rubicon::Frostbite::RconClient, config[:rubicon][:password]
         end
    end
