@@ -3,7 +3,7 @@ require "digest/md5"
 module Rubicon::Frostbite::BF3
     class Server
         require 'rubicon/frostbite/bf3/signal_handlers'
-        require 'rubicon/frostbite/bf3/packet_handlers'
+        require 'rubicon/frostbite/bf3/event_handlers'
 
         attr_reader :connection
         attr_accessor :name, :players, :max_players, :game_mode,
