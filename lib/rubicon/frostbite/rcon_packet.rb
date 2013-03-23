@@ -133,7 +133,9 @@ module Rubicon::Frostbite
         def encode_words
             ret = ""
 
-            @words.each do |word|
+            @words.each do |w|
+                word = w.to_s
+
                 ret += Array(word.length).pack('V')
                 ret += word
                 ret += "\x00"

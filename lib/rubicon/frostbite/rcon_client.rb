@@ -9,6 +9,8 @@ module Rubicon::Frostbite
         def initialize(password)
             super
 
+            Rubicon.connected
+
             @logger = Rubicon.logger("RconClient")
 
             @password = password
@@ -19,16 +21,21 @@ module Rubicon::Frostbite
         end
 
         def connection_completed
-            Thread.new do
+            @handler_thread = Thread.new do
                 begin
                     response = send_request("version")
-                    server_game = response.words[1]
+                    if (response.read_word != "OK")
+                        @logger.fatal("Server appears to be abnormal. Disconnectiong")
+                        close_connection
+                    end
+
+                    server_game = response.read_word
                     if(@@game_handlers[server_game])
                         @game_handler = @@game_handlers[server_game].new(self, @password)
                         @game_handler.connected
                         @game_handler.start_event_pump
                     else
-                        @logger.fatal("No game handler for \"#{server_game}\"! Shutting down")
+                        @logger.fatal("No game handler for \"#{server_game}\"! Shutting down.")
                         close_connection
                     end
                 rescue Exception => e
@@ -36,6 +43,12 @@ module Rubicon::Frostbite
                     Rubicon.logger("HandlerThread").error (e.backtrace || [])[0..10].join("\n")
                 end
             end
+        end
+
+        def unbind
+            @handler_thread.join
+            Rubicon.disconnected
+            @logger.debug { "Connection unbound" }
         end
 
         def receive_data(data)
