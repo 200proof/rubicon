@@ -19,7 +19,7 @@ module Rubicon
         logger("Rubicon").info("Starting Rubicon version #{VERSION}")
         logger("Rubicon").info("Loaded config from #{config[:config_file]}")
 
-        @@plugin_manager = PluginManager.new(config[:rubicon][:plugins_dir])
+        Rubicon::PluginManager.load_plugins(config[:rubicon][:plugins_dir])
         @@running_clients = 0
 
         EventMachine.run do

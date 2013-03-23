@@ -12,7 +12,7 @@ module Rubicon::Frostbite::BF3
             :has_password, :uptime, :round_time, :ip,
             :punkbuster_version, :join_queue, :region,
             :closest_ping_site, :country, :matchmaking,
-            :teams
+            :teams, :plugin_manager
 
         def initialize(connection, password)
             @connection = connection
@@ -21,6 +21,8 @@ module Rubicon::Frostbite::BF3
 
             @players = {}
             @teams = []
+
+            @plugin_manager = Rubicon::PluginManager.new(self)
 
             # 0 = neutral, 16 possible teams
             17.times do |idx|
@@ -94,7 +96,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def process_event(event)
-            if @@event_handlers[event]
+            if @@event_handlers[event.words[0]]
                 @@event_handlers[event.words[0]].call(self, event)
             else
                 @logger.warn { "No handler for packet #{event.words[0]}" }

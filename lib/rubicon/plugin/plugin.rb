@@ -1,10 +1,9 @@
 module Rubicon
     class Plugin
-        @@plugins_loaded = []
         @@event_method_names = {}
         @@command_method_names = {}
         def self.inherited(base)
-            @@plugins_loaded << base
+            PluginManager.loaded_plugins << base
             Rubicon.logger("Plugin").debug { "Loaded plugin #{base.name} "}
         end
 
@@ -14,6 +13,14 @@ module Rubicon
 
         def self.command_method_name(command_name)
             @@command_method_names[command_name] ||= "command_#{command_name}".downcase.gsub(/\./, "_").to_sym
+        end
+
+        def self.event_handlers
+            @@event_method_names
+        end
+
+        def self.command_handlers
+            @@command_method_names
         end
 
         # Provides a DSL for responding to server events such as players joining, chat messages
@@ -97,7 +104,7 @@ module Rubicon
         # Provides access to the logging system. All logged events
         # will contain the plugin's class name.
         def logger
-            @logger ||= Rubicon.logger(self.name)
+            @logger ||= Rubicon.logger(self.class.name)
         end
 
         # To prevent potentially silly things from happening, please do
@@ -105,16 +112,23 @@ module Rubicon
         #
         # Instead use the `enabled`, and `disabled` directives
         # to manage your plugin's lifecycle.
-        def initialize
-            logger.info { "Initialized #{self.name}" }
+        def initialize(server)
+            @server = server
+            logger.info { "Initialized #{self.class.name}" }
         end
+
+        attr_reader :server
 
         # To make the DSL more elegant, the event and command blocks do not take arguments.
         # Instead, since plugin processing is currently single-threaded, they are drawn from 
         # a hash whose value is set by the plugin manager. Any parameters which are not
         # expected to be passed to the event or command will return nil.
         def method_missing(method_name, *args, &block)
-            @current_args[:method_name]
+            @current_args[method_name]
+        end
+
+        def current_args=(args)
+            @current_args = args
         end
     end
 end
