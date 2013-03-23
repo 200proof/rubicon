@@ -31,4 +31,22 @@ class Rubicon::Frostbite::BF3::Server
         server.country = info.read_word,
         server.matchmaking = info.read_bool 
     end
+
+    signal :refresh_scoreboard do |server|
+        scoreboard_packet = server.connection.send_request("admin.listPlayers", "all")
+
+        status, scoreboard = scoreboard.read_word, scoreboard.read_player_info_block
+
+        scoreboard.each do |player|
+            server.players[player.name] ||= Player.new(player["name"], player["guid"])
+            server.players[player.name].name   = player["name"]
+            server.players[player.name].guid   = player["guid"]
+            server.players[player.name].team   = player["teamId"]
+            server.players[player.name].squad  = player["squadId"]
+            server.players[player.name].kills  = player["kills"]
+            server.players[player.name].deaths = player["deaths"]
+            server.players[player.name].score  = player["score"]
+            server.players[player.name].rank   = player["rank"]
+        end
+    end
 end

@@ -5,6 +5,7 @@ module Rubicon
 
     def self.disconnected
         @@running_clients -= 1
+        EventMachine.stop_event_loop if @@running_clients == 0
     end
 
     def self.logger(progname="")
@@ -28,7 +29,13 @@ module Rubicon
             end
 
             EventMachine.connect config[:rubicon][:server], config[:rubicon][:port], Rubicon::Frostbite::RconClient, config[:rubicon][:password]
-            EventMachine.add_periodic_timer { EventMachine.stop if @@running_clients == 0 }
+            
+            # stop_checker = proc do
+            #     EventMachine.stop if @@running_clients == 0
+            #     EventMachine.next_tick(stop_checker)
+            # end
+
+            # stop_checker.call
         end
 
         logger("Rubicon").debug { "EventMachine reactor stopped" }

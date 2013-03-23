@@ -10,7 +10,6 @@ module Rubicon::Frostbite
             super
 
             Rubicon.connected
-
             @logger = Rubicon.logger("RconClient")
 
             @password = password
@@ -25,15 +24,19 @@ module Rubicon::Frostbite
                 begin
                     response = send_request("version")
                     if (response.read_word != "OK")
-                        @logger.fatal("Server appears to be abnormal. Disconnectiong")
+                        @logger.fatal("Server appears to be abnormal. Disconnecting")
                         close_connection
                     end
 
                     server_game = response.read_word
                     if(@@game_handlers[server_game])
                         @game_handler = @@game_handlers[server_game].new(self, @password)
-                        @game_handler.connected
-                        @game_handler.start_event_pump
+                        
+                        if @game_handler.connected
+                            @game_handler.start_event_pump
+                        else
+                            close_connection
+                        end
                     else
                         @logger.fatal("No game handler for \"#{server_game}\"! Shutting down.")
                         close_connection

@@ -18,6 +18,14 @@ module Rubicon::Frostbite::BF3
             @connection = connection
             @password = password
             @logger = Rubicon.logger("BF3Server")
+
+            @players = {}
+            @teams = []
+
+            # 0 = neutral, 16 possible teams
+            17.times do |idx|
+                @teams[idx] = Team.new(self, idx)
+            end
         end
 
         # Called when successfully connected to a BF3 RCON server
@@ -28,12 +36,16 @@ module Rubicon::Frostbite::BF3
 
             @logger.info { "Connected to #{@name}!" }
 
-            if !attempt_login
+            if attempt_login
                 @logger.fatal { "Failed to log in!" }
-                @connection.close
+                return false
             end
 
+            process_signal(:refresh_scoreboard)
+
             @connection.send_command "admin.eventsEnabled", "true"
+
+            return true
         end
 
         # Attempts to log in using a hashed password
@@ -53,8 +65,7 @@ module Rubicon::Frostbite::BF3
             Digest::MD5.hexdigest(salted_password).upcase
         end
 
-        # Loops until a :disconnect is passed as a message via
-        # the message channel created by the connection
+        # Process signals and events
         def start_event_pump
             while message = @connection.message_channel.receive
                 if (message.is_a? Rubicon::Frostbite::RconPacket)
