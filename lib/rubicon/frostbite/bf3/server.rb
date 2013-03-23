@@ -36,7 +36,7 @@ module Rubicon::Frostbite::BF3
 
             @logger.info { "Connected to #{@name}!" }
 
-            if attempt_login
+            if !attempt_login
                 @logger.fatal { "Failed to log in!" }
                 return false
             end
