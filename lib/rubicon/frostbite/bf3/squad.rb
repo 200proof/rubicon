@@ -4,6 +4,26 @@ module Rubicon::Frostbite::BF3
             @server = server
             @team = team
             @id = id
+
+            @players = {}
+        end
+
+        def add(player)
+            if player.is_a? Player
+                @players[player.name] = player
+            else
+                raise "#{player} is not a valid player!"
+            end
+        end
+
+        def remove(player)
+            if player.is_a? Player
+                @players.delete player.name
+            elsif player.is_a? String
+                @players.delete player
+            else
+                raise "#{player} is not a valid player!"
+            end
         end
 
         def say(msg)

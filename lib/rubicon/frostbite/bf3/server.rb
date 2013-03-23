@@ -11,7 +11,7 @@ module Rubicon::Frostbite::BF3
             :score_target, :online_state, :ranked, :punkbuster,
             :has_password, :uptime, :round_time, :ip,
             :punkbuster_version, :join_queue, :region,
-            :closest_ping_site, :country, :matchmaking, :players,
+            :closest_ping_site, :country, :matchmaking,
             :teams
 
         def initialize(connection, password)
@@ -26,6 +26,8 @@ module Rubicon::Frostbite::BF3
             17.times do |idx|
                 @teams[idx] = Team.new(self, idx)
             end
+
+            @players["Server"] = SpecialPlayer.new(self, "Server", "NO_GUID")
         end
 
         # Called when successfully connected to a BF3 RCON server
@@ -69,21 +71,34 @@ module Rubicon::Frostbite::BF3
         def start_event_pump
             while message = @connection.message_channel.receive
                 if (message.is_a? Rubicon::Frostbite::RconPacket)
-                    process_packet(message)
+                    process_event(message)
                 elsif (message.is_a? Symbol)
+                    if (message == :shutdown)
+                        shutdown!
+                        break
+                    end
                     process_signal(message)
                 else
                     @logger.warn("Discarding unknown message: #{message}")
                 end
             end
+            @logger.info { "Event pump stopped. Shutting down like a boss."}
         end
 
         def process_signal(signal)
-            @@signal_handlers[signal].call(self) rescue @logger.warn { "No handler for signal #{signal}" }
+            if @@signal_handlers[signal]
+                @@signal_handlers[signal].call(self)
+            else
+                @logger.warn { "No handler for signal #{signal}" }
+            end
         end
 
-        def process_packet(packet)
-            @@packet_handlers[packet.words[0]].call(self, packet) rescue @logger.warn { "No handler for packet #{packet.words[0]}" }
+        def process_event(event)
+            if @@event_handlers[event]
+                @@event_handlers[event.words[0]].call(self, event)
+            else
+                @logger.warn { "No handler for packet #{event.words[0]}" }
+            end
         end     
     end
 

@@ -1,4 +1,5 @@
 class MyTestPlugin < Rubicon::Plugin
-    def initialize()
+    command :shutdown do
+        server.connection.close_connection
     end
 end
