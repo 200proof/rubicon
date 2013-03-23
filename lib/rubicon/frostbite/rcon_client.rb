@@ -46,7 +46,14 @@ module Rubicon::Frostbite
         end
 
         def unbind
-            @handler_thread.join
+            if @handler_thread
+                @handler_thread.join
+            else
+                # If this gets called before a handler thread is created, it
+                # means that EventMachine failed to connect.
+                @logger.fatal { "Failed to connect! Make sure you entered the correct IP address and port in the config!" }
+            end
+
             Rubicon.disconnected
             @logger.debug { "Connection unbound" }
         end
