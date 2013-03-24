@@ -10,7 +10,12 @@ module Rubicon::Util
             @logger.level = level
             @logger.formatter = proc do |level, datetime, progname, msg|
                 progname ||= ""
-                "[#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(15)+" " if !progname.empty?} #{msg}\n"
+                prefix = "[#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(15)+" " if !progname.empty?} "
+                spacer = " "*prefix.length
+
+                # Push any further lines so they align with the rest of the message
+                msg = msg.lines.each_with_index.map { |line, lnum| line = (lnum > 0 ? "#{spacer}#{line}" : line) }.join
+                "#{prefix}#{msg}\n"
             end
         end
 

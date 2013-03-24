@@ -29,33 +29,29 @@ module Rubicon
         end
 
         def dispatch_event(event_name, args)
-            begin
-                @active_plugins.values.each do |plugin_instance|
-                    event_handler_name = plugin_instance.class.event_handlers[event_name]
-                    if(event_handler_name)
-                        plugin_instance.current_args = args
-                        plugin_instance.send event_handler_name
-                    end
+            @active_plugins.values.each do |plugin_instance|
+                event_handler_name = plugin_instance.class.event_handlers[event_name]
+                if(event_handler_name)
+                    plugin_instance.current_args = args
+                    plugin_instance.send event_handler_name
                 end
-            rescue Exception => e
-                @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
-                @@logger.error (e.backtrace || [])[0..10].join("\n")
             end
+        rescue Exception => e
+            @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
+            @@logger.error (e.backtrace || [])[0..10].join("\n")
         end
 
         def dispatch_command(command_name, args)
-            begin
-                @active_plugins.values.each do |plugin_instance|
-                    command_handler_name = plugin_instance.class.command_handlers[command_name.to_sym]
-                    if(command_handler_name)
-                        plugin_instance.current_args = args
-                        plugin_instance.send command_handler_name
-                    end
+            @active_plugins.values.each do |plugin_instance|
+                command_handler_name = plugin_instance.class.command_handlers[command_name.to_sym]
+                if(command_handler_name)
+                    plugin_instance.current_args = args
+                    plugin_instance.send command_handler_name
                 end
-            rescue Exception => e
-                @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
-                @@logger.error (e.backtrace || [])[0..10].join("\n")
             end
+        rescue Exception => e
+            @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
+            @@logger.error (e.backtrace || [])[0..10].join("\n")
         end
 
         def enable_plugin(plugin)

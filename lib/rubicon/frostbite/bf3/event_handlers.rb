@@ -49,13 +49,24 @@ module Rubicon::Frostbite::BF3
             end
         end
 
+        event "player.onAuthenticated" do |server, packet|
+            event_name = packet.read_word
+            player_name = packet.read_word
+
+            server.players[player_name] ||= Player.new(server, player_name) 
+
+            server.logger.info { "[AUTH] <#{player_name}> has been authenticated!" }
+        end
+
         event "player.onJoin" do |server, packet|
             event_name = packet.read_word
             player = packet.read_word
             guid = packet.read_word
 
-            p = Player.new(server, player, guid)
-            server.players[player] = p
+            p = (server[player] ||= Player.new(server, player, guid))
+            p.guid = guid
+
+            server.logger.info { "[JOIN] <#{player}> has joined the server!" }
 
             server.plugin_manager.dispatch_event(event_name, { player: p })
         end
@@ -102,6 +113,8 @@ module Rubicon::Frostbite::BF3
             team       = packet.read_word.to_i
             squad      = packet.read_word.to_i
 
+            p server.players.keys if player == nil
+
             old_team = player.team
             player.team = team
             new_team = player.team
@@ -113,6 +126,13 @@ module Rubicon::Frostbite::BF3
             }
 
             server.plugin_manager.dispatch_event(event_name, event_args)
+        end
+
+        event "punkBuster.onMessage" do |server, packet|
+            event_name = packet.read_word
+            message = packet.read_word
+
+            server.plugin_manager.dispatch_event(event_name, { message: message })
         end
     end
 end

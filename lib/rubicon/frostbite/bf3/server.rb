@@ -27,7 +27,7 @@ module Rubicon::Frostbite::BF3
                 @teams[idx] = Team.new(self, idx)
             end
 
-            @players["Server"] = SpecialPlayer.new(self, "Server", "NO_GUID")
+            @players["Server"] = SpecialPlayer.new(self, "Server")
         end
 
         # Called when successfully connected to a BF3 RCON server
@@ -96,9 +96,16 @@ module Rubicon::Frostbite::BF3
 
         def process_event(event)
             if @@event_handlers[event.words[0]]
-                @@event_handlers[event.words[0]].call(self, event)
+                begin
+                    @@event_handlers[event.words[0]].call(self, event)
+                rescue Exception => e
+                    @logger.error { "Exception processing event #{event.words[0]}" }
+                    @logger.error { "Offending packet: #{event.inspect}"}
+                    @logger.error "Exception in plugin: #{e.message} (#{e.class})"
+                    @logger.error (e.backtrace || [])[0..10].join("\n")
+                end
             else
-                @logger.debug { "No handler for packet #{event.words[0]}" }
+                @logger.warn { "No handler for packet #{event.words[0]}" }
             end
         end     
     end

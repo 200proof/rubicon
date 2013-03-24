@@ -113,15 +113,12 @@ module Rubicon::Frostbite::BF3
         "Taurus .44"                        => Weapon.new(:magnum44),
         "Weapons/MP412Rex/MP412REX"         => Weapon.new(:mp412rex),
         "Weapons/MP443/MP443"               => Weapon.new(:mp443),
-        "Death"                             => Weapon.new(:death),
+        "Death"                             => Weapon.new(:death), # this is the generic death that the game falls back to, shows up as KILLED
         "Suicide"                           => Weapon.new(:suicide),
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
-        "DamageArea"                        => Weapon.new(:crispy),
+        "DamageArea"                        => Weapon.new(:crispy)
     }
-
-    WEAPONS.default_proc = proc do |hash, key|
-        hash[key] = :bad_luck
-    end
+    WEAPONS.default = Weapon.new(:bad_luck)
 
     FRIENDLY_NAMES = {
         takedown:           "Knife Takedown",

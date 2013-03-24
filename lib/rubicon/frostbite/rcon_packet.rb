@@ -16,6 +16,7 @@ module Rubicon::Frostbite
             @origin     = origin
             @type       = type
             @words      = words
+            @read_index = -1 # since we read with @words[@read_index += 1]
 
             if (type == :response)
                 @response = words[0]
@@ -50,14 +51,18 @@ module Rubicon::Frostbite
             @response
         end
 
+        # Resets the read index allowing the packet
+        # to be read from the very beginning
+        def rewind
+            @read_index = -1
+        end
+
         # Reads the next word in this packet
-        # NOTE: this modifies the packet
         def read_word
-            @words.shift
+            @words[@read_index += 1]
         end
 
         # Reads a player info block
-        # NOTE: this modifies the packet
         def read_player_info_block
             keys, ret = [], []
 
@@ -79,7 +84,6 @@ module Rubicon::Frostbite
         end
 
         # Reads a "Team Scores" block
-        # NOTE: this modifies the packet
         # Returns [[team scores], target]
         def read_team_scores
             ret = []
