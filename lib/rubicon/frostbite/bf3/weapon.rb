@@ -116,7 +116,7 @@ module Rubicon::Frostbite::BF3
         "Death"                             => Weapon.new(:death), # this is the generic death that the game falls back to, shows up as KILLED
         "Suicide"                           => Weapon.new(:suicide),
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
-        "DamageArea"                        => Weapon.new(:crispy)
+        "DamageArea"                        => Weapon.new(:crispy) # Standing in fire
     }
     WEAPONS.default = Weapon.new(:bad_luck)
 
@@ -209,6 +209,6 @@ module Rubicon::Frostbite::BF3
         suicide:            "Suicide",
         bad_luck:           "Bad Luck",
         pancakes:           "Terminal Deceleration",
-        crispy:             "Burned to a crisp."
+        crispy:             "Burned to a crisp"
     }
 end

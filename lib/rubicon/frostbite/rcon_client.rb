@@ -42,7 +42,7 @@ module Rubicon::Frostbite
                         close_connection
                     end
                 rescue Exception => e
-                    Rubicon.logger("HandlerThread").error "Exception during event: #{e.message} (#{e.class})"
+                    Rubicon.logger("HandlerThread").error "Exception in HandlerThread: #{e.message} (#{e.class})"
                     Rubicon.logger("HandlerThread").error (e.backtrace || [])[0..10].join("\n")
                 end
             end
