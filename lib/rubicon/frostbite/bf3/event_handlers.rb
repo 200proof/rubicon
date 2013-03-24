@@ -6,14 +6,22 @@ class Rubicon::Frostbite::BF3::Server
 
     event "player.onKill" do |server, packet|
         event_name = packet.read_word
-        event_args = {
-            killer: server.players[packet.read_word],
-            victim: server.players[packet.read_word],
-            weapon: Rubicon::Frostbite::BF3::WEAPONS[packet.read_word],
-            headshot?: packet.read_bool
-        }
         
-        server.plugin_manager.dispatch_event(event_name, event_args)
+        killer    = packet.read_word,
+        victim    = packet.read_word,
+        weapon    = Rubicon::Frostbite::BF3::WEAPONS[packet.read_word],
+        headshot? = packet.read_bool
+
+        if (killer == "") || (killer == victim)
+            event_args = { player: server.players[victim], weapon: weapon }
+            server.plugin_manager.dispatch_event("player.onSuicide", event_args)
+        else
+            killer = server.players[killer]
+            victim = server.players[victim]
+
+            event_args = { killer: killer, victim: victim, weapon: weapon, headshot?: headshot }
+            server.plugin_manager.dispatch_event("player.onKill", event_args)
+        end
     end
 
     event "player.onChat" do |server, packet|
