@@ -10,7 +10,7 @@ class Rubicon::Frostbite::BF3::Server
         killer    = packet.read_word,
         victim    = packet.read_word,
         weapon    = Rubicon::Frostbite::BF3::WEAPONS[packet.read_word],
-        headshot? = packet.read_bool
+        headshot = packet.read_bool
 
         if (killer == "") || (killer == victim)
             event_args = { player: server.players[victim], weapon: weapon }
