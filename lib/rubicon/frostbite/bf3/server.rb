@@ -22,8 +22,6 @@ module Rubicon::Frostbite::BF3
             @players = {}
             @teams = []
 
-            @plugin_manager = Rubicon::PluginManager.new(self)
-
             # 0 = neutral, 16 possible teams
             17.times do |idx|
                 @teams[idx] = Team.new(self, idx)
@@ -47,6 +45,7 @@ module Rubicon::Frostbite::BF3
 
             process_signal(:refresh_scoreboard)
 
+            @plugin_manager = Rubicon::PluginManager.new(self)
             @connection.send_command "admin.eventsEnabled", "true"
 
             return true
