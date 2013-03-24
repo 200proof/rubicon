@@ -59,5 +59,60 @@ module Rubicon::Frostbite::BF3
 
             server.plugin_manager.dispatch_event(event_name, { player: p })
         end
+
+        event "player.onLeave" do |server, packet|
+            event_name   = packet.read_word
+            player_name  = packet.read_word
+            player_stats = packet.read_player_info_block.first
+
+            p = server.players[player_name]
+            p.disconnected
+            server.players.delete player_name
+
+            event_args   = {
+                player_name:  player_name,
+                player_stats: player_stats
+            }
+
+            server.plugin_manager.dispatch_event(event_name, event_args)
+        end
+
+        event "player.onSquadChange" do |server, packet|
+            event_name = packet.read_word
+            player     = server.players[packet.read_word]
+            team       = packet.read_word.to_i
+            squad      = packet.read_word.to_i
+
+            old_squad = player.squad
+            player.squad = squad
+            new_squad = player.squad
+
+            event_args = {
+                player: player,
+                old_squad: old_squad,
+                new_squad: new_squad
+            }
+
+            server.plugin_manager.dispatch_event(event_name, event_args)
+        end
+
+        event "player.onTeamChange" do |server, packet|
+            event_name = packet.read_word
+            player     = server.players[packet.read_word]
+            team       = packet.read_word.to_i
+            squad      = packet.read_word.to_i
+
+            old_team = player.team
+            player.team = team
+            new_team = player.team
+
+            event_args = {
+                player: player,
+                old_team: old_team,
+                new_team: new_team
+            }
+
+            server.plugin_manager.dispatch_event(event_name, event_args)
+        end
     end
 end

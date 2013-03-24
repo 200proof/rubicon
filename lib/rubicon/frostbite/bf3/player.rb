@@ -106,6 +106,11 @@ module Rubicon::Frostbite::BF3
         def inspect
             "#<BF3Player: #{@name} #{@kills}/#{@deaths} #{@score}"
         end
+
+        def disconnected
+            squad.remove @name
+            team.remove @name
+        end
     end
 
     # A special player is used for any commands or events sent by the console or the
