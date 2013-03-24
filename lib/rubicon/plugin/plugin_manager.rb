@@ -21,7 +21,6 @@ module Rubicon
             @active_plugins = {}
 
             @@loaded_plugins.each do |klass|
-                p klass
                 plugin = klass.new(server)
                 plugin.enabled
 
@@ -45,12 +44,18 @@ module Rubicon
         end
 
         def dispatch_command(command_name, args)
-            @active_plugins.values.each do |plugin_instance|
-                command_handler_name = plugin_instance.class.command_handlers[command_name]
-                if(event_handler_name)
-                    plugin_instance.current_args = args
-                    plugin_instance.send command_handler_name
+            begin
+                p "#{command_name}"
+                @active_plugins.values.each do |plugin_instance|
+                    command_handler_name = plugin_instance.class.command_handlers[command_name.to_sym]
+                    if(command_handler_name)
+                        plugin_instance.current_args = args
+                        plugin_instance.send command_handler_name
+                    end
                 end
+            rescue Exception => e
+                @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
+                @@logger.error (e.backtrace || [])[0..10].join("\n")
             end
         end
 

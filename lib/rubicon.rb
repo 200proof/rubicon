@@ -24,5 +24,6 @@ module Rubicon
         require "rubicon/frostbite/bf3/player.rb"
         require "rubicon/frostbite/bf3/team.rb"
         require "rubicon/frostbite/bf3/squad.rb"
+        require "rubicon/frostbite/bf3/weapon.rb"
     end
 end

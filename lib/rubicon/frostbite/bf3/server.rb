@@ -5,7 +5,7 @@ module Rubicon::Frostbite::BF3
         require 'rubicon/frostbite/bf3/signal_handlers'
         require 'rubicon/frostbite/bf3/event_handlers'
 
-        attr_reader :connection
+        attr_reader :connection, :logger # logger is really only here for event_handlers.
         attr_accessor :name, :players, :max_players, :game_mode,
             :current_map, :rounds_played, :rounds_total, :scores,
             :score_target, :online_state, :ranked, :punkbuster,
@@ -99,7 +99,7 @@ module Rubicon::Frostbite::BF3
             if @@event_handlers[event.words[0]]
                 @@event_handlers[event.words[0]].call(self, event)
             else
-                @logger.warn { "No handler for packet #{event.words[0]}" }
+                @logger.debug { "No handler for packet #{event.words[0]}" }
             end
         end     
     end
