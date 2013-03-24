@@ -111,16 +111,17 @@ module Rubicon::Frostbite::BF3
         "M9"                                => Weapon.new(:m9),
         "M93R"                              => Weapon.new(:m93),
         "Taurus .44"                        => Weapon.new(:magnum44),
-        "Weapons/MP412REX/MP412REX"         => Weapon.new(:mp412rex),
+        "Weapons/MP412Rex/MP412REX"         => Weapon.new(:mp412rex),
         "Weapons/MP443/MP443"               => Weapon.new(:mp443),
-        "Death"                             => Weapon.new(:out_of_bounds),
+        "Death"                             => Weapon.new(:death),
         "Suicide"                           => Weapon.new(:suicide),
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
+        "DamageArea"                        => Weapon.new(:crispy),
         "\x89D$\x14\x85\xDBt\b\x8B\x83\x1C\x03" => Weapon.new(:bad_luck), # apparently....
     }
 
     WEAPONS.default_proc = proc do |hash, key|
-        p key
+        key.to_sym
     end
 
     FRIENDLY_NAMES = {
@@ -208,9 +209,10 @@ module Rubicon::Frostbite::BF3
         magnum44:           ".44 Magnum",
         mp412rex:           "MP412 REX",
         mp443:              "MP443",
-        out_of_bounds:      "Out of Bounds", 
+        death:              "KILLED", 
         suicide:            "Suicide",
         bad_luck:           "Bad Luck",
-        pancakes:           "Terminal Deceleration" 
+        pancakes:           "Terminal Deceleration",
+        crispy:             "Burned to a crisp."
     }
 end

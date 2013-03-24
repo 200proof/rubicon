@@ -11,6 +11,11 @@ module Rubicon::Frostbite::BF3
             @team_id = 0
             @squad_id = 0
 
+            @kills = 0
+            @deaths = 0
+            @rank = 0
+            @score = 0
+
             team.add self
             squad.add self
         end
@@ -95,6 +100,11 @@ module Rubicon::Frostbite::BF3
         # NOTE: This function cannot currently detect aimbots.
         def is_human?
             true
+        end
+
+        # Pretty print like a boss
+        def inspect
+            "#<BF3Player: #{@name} #{@kills}/#{@deaths} #{@score}"
         end
     end
 

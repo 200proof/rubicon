@@ -47,10 +47,10 @@ module Rubicon::Frostbite::BF3
                 server.players[name] ||= Player.new(server, player["name"], player["guid"])
                 server.players[name].team   = player["teamId"].to_i
                 server.players[name].squad  = player["squadId"].to_i
-                server.players[name].kills  = player["kills"]
-                server.players[name].deaths = player["deaths"]
-                server.players[name].score  = player["score"]
-                server.players[name].rank   = player["rank"]
+                server.players[name].kills  = player["kills"].to_i
+                server.players[name].deaths = player["deaths"].to_i
+                server.players[name].score  = player["score"].to_i
+                server.players[name].rank   = player["rank"].to_i
             end
         end
     end

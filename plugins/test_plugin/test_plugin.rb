@@ -7,6 +7,10 @@ class MyTestPlugin < Rubicon::Plugin
         logger.info "#{player.name} killed themselves via #{weapon.name}"
     end
 
+    event "player.onJoin" do
+        logger.info "#{player.name} has joined the server!"
+    end
+
     command :rbcshutdown do
         logger.info "Shutdown issued by #{player.name}!"
         server.connection.close_connection
