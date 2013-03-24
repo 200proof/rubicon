@@ -45,8 +45,6 @@ module Rubicon::Frostbite::BF3
             scoreboard.each do |player|
                 name = player["name"]
                 server.players[name] ||= Player.new(server, player["name"], player["guid"])
-                server.players[name].name   = name
-                server.players[name].guid   = player["guid"]
                 server.players[name].team   = player["teamId"].to_i
                 server.players[name].squad  = player["squadId"].to_i
                 server.players[name].kills  = player["kills"]

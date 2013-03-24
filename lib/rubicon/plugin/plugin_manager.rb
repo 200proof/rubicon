@@ -45,7 +45,6 @@ module Rubicon
 
         def dispatch_command(command_name, args)
             begin
-                p "#{command_name}"
                 @active_plugins.values.each do |plugin_instance|
                     command_handler_name = plugin_instance.class.command_handlers[command_name.to_sym]
                     if(command_handler_name)
