@@ -56,7 +56,7 @@ module Rubicon::Frostbite::BF3
         "QBB-95"                            => Weapon.new(:qbb95),
         "QBZ-95"                            => Weapon.new(:qbz95),
         "RPK-74M"                           => Weapon.new(:rpk74m),
-        "SG 553 LB"                         => Weapon.new(:sg553), # TODO: verify me
+        "SG 553 LB"                         => Weapon.new(:sg553),
         "Weapons/A91/A91"                   => Weapon.new(:a91),
         "Weapons/AK74M/AK74"                => Weapon.new(:ak74),
         "Weapons/G36C/G36C"                 => Weapon.new(:g36),
@@ -86,7 +86,7 @@ module Rubicon::Frostbite::BF3
         "jackhammer"                        => Weapon.new(:mk3a1),
         "M1014"                             => Weapon.new(:m1014),
         "M26 MASS"                          => Weapon.new(:m26mass),
-        "Siaga20k"                          => Weapon.new(:saiga), #todo: verify me
+        "Siaga20k"                          => Weapon.new(:saiga),
         "USAS-12"                           => Weapon.new(:usas12),
         "SPAS-12"                           => Weapon.new(:spas12),
         "F2000"                             => Weapon.new(:f2000),
@@ -117,11 +117,10 @@ module Rubicon::Frostbite::BF3
         "Suicide"                           => Weapon.new(:suicide),
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
         "DamageArea"                        => Weapon.new(:crispy),
-        "\x89D$\x14\x85\xDBt\b\x8B\x83\x1C\x03" => Weapon.new(:bad_luck), # apparently....
     }
 
     WEAPONS.default_proc = proc do |hash, key|
-        key.to_sym
+        hash[key] = :bad_luck
     end
 
     FRIENDLY_NAMES = {
