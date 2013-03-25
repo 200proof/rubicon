@@ -10,7 +10,7 @@ module Rubicon::Util
             "WARN" => { color: :yellow, background: :black },
             "ERROR" => { color: :red, background: :black },
             "FATAL" => { color: :black, background: :red },
-            "EVENT" => { color: :white, background: :green },
+            "EVENT" => { color: :green, background: :black },
         }
 
         # Mutex for puts
