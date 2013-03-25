@@ -22,5 +22,5 @@ _yardoc
 doc/
 
 # Rubicon configuration specifics
-rubicon.yml
-rubicon.log
+*.yml
+*.log
