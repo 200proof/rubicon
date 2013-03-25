@@ -1,15 +1,23 @@
 ---
-# The `rubicon` namespace holds core Rubicon configuration
-:rubicon:
-    # Where to save logs to
-    :log_file: rubicon.log
+# The `rubicon` namespace holds core Rubicon configuration.
+rubicon:
+    # Highly recommended to leave this unchanged, unless you're
+    # using different plugin sets for different Rubicon instances
+    plugins_dir: plugins
+
+    # If you're running on a POSIX compliant platform, you can
+    # administer your server via a simple `echo | nc` to a domain socket!
+    # !! This will never be supported on Windows. !!
+    #
+    # Uncomment below to enable. 
+    #domain_socket_path: rubicon.sock
 
     # The log level represents the verbosity of the application.
     # A lower value will print out more information, (i.e. level 2
     # will also print out any information in levels 3, 4, and 5)
     #
     # 0 will print out a lot of debug info
-    # 1 will print out useful information
+    # 1 will print out useful information *including player events)
     # 2 will print warnings
     # 3 will print errors
     # 4 will print FATAL errors (those causing shutdown)
@@ -17,21 +25,93 @@
     #   space-time continuum
     #
     # It is recommended to leave this value at 1
-    :log_level: 1
+    log_level: 1
 
-    # The IP address or hostname of your RCON server.
-    :server: 0.0.0.0
+# This is where servers which are to be managed are configured.
+servers:
+    - name:       server1       # A short identifier for your server. This is used internally.     
 
-    # The port on which your RCON server is awaiting connections.
-    :port: 12345
+      server:     98.76.54.32   # The IP address or hostname of your RCON server.
 
-    # The password to your RCON server.
-    :password: yourpasswordhere
+      port:       12345         # The port on which your RCON server is awaiting connections.
 
-    # Highly recommended to leave this unchanged, unless you're
-    # using different plugin sets for different servers
-    :plugins_dir: plugins
+      password:   supersecretyo # The password to your RCON server.
 
-    # Used as a basic administration tool. Send commands as you would in
-    # chat to the socket via `nc`
-    :domain_socket_path: rubicon.sock
+      config:     the_best.yml  # This is where plugins will store their data.
+                                # Additionally, you may also specify any custom permissions on a
+                                # per-server basis in that file. It will default to `<name>.log` 
+                                # in the same directory as the global config file, where <name>
+                                # is the name field specified above
+
+      log_file:   the_best.log  # Where to save this server's logs. If this is left blank,
+                                # the log file for this server will default to `<name>.yml` 
+                                # in the same directory as the global log file, where <name>
+                                # is the name field specified above. 
+
+      log_kills:  Yes           # Whether or not to log kills and deaths.
+                                # If this is left out, it will default to Yes
+                                # Any such events will still show up in the console.
+
+      log_chat:   Yes           # Whether or not to log chat messages.
+                                # Like log_kills, this defaults to Yes
+                                # Chat messages will still show up in the console.
+
+      log_joins:  Yes           # Whether or not to log players joining and leaving the server
+                                # This also defaults to Yes, and yes, you guessed it, the event
+                                # still shows up in the console regardless of the setting.
+
+      log_other:  Yes           # Whether or not to log other events such as team/squad changes,
+                                # round start/end, etc. This setting has the same behavior as the
+                                # previous options.
+
+      # Another example. Note how a specific log file is not given.
+      # As such, This server's logs will go into `test2.log`, and
+      # it will grab its config from `test2.yml`. It will NOT
+      # log "other" events, however, as the option has been
+      # explicitly set to No
+    - name:      test2
+      server:    123.45.67.89
+      port:      54321
+      password:  topsecretyo
+      log_other: No
+
+# Here you can specify usergroups. 
+# These permissions will be applied to every server.
+# If you want to add specific permissions on a per-server basis,
+# you may do so using the same hierachy as below.
+#
+# The group names are completely arbitrary.
+permissions:
+    groups: 
+        manager: 
+            - shutdown
+            - modify_permissions
+
+        admin:
+            - kill
+            - ban
+            - kick
+            - yell
+
+        hacker:
+            - voteban_exempt
+            - votekick_exempt
+
+    players:
+        - name: 200proof
+          groups:
+            - manager
+            - admin
+            - hacker
+
+        - name: 
+
+        # Notice how this user has a permissions field.
+        # As such, he will have the `use_hax`and `pwn_noobs`
+        # permission in addition to any permission he inherits from
+        # the `hacker` group.
+        - name: Leo 
+          groups:
+            - hacker
+          permissions:
+            - use_hax
