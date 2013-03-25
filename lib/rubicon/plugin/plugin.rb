@@ -115,6 +115,7 @@ module Rubicon
         def initialize(server)
             @server = server
             logger.info { "Initialized #{self.class.name}" }
+            enabled
         end
 
         attr_reader :server

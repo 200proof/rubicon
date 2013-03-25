@@ -27,15 +27,18 @@ module Rubicon
         @@running_clients = 0
         @@message_channels = []
 
-        Signal.trap("INT") do
-            puts # just to keep the on-console neat if ^C pops up
+        shutdown_proc = proc do
+            puts # just to keep the on-console neat if a control char pops up
             Thread.new {
-                logger("Rubicon").info ("Received SIGINT, shutting down gracefully.")
+                logger("Rubicon").info ("Received SIGINT/SIGTERM, shutting down gracefully.")
                 EM.stop_event_loop if @@running_clients == 0 # User might potentially have to wait if they 
                                                              # SIGINT while a connection is waiting to time out
                 @@message_channels.each { |channel| channel.send :shutdown }
             }
         end
+
+        Signal.trap "INT", shutdown_proc
+        Signal.trap "TERM", shutdown_proc
 
         EventMachine.run do
             EventMachine.error_handler do |e|
