@@ -31,3 +31,7 @@
     # Highly recommended to leave this unchanged, unless you're
     # using different plugin sets for different servers
     :plugins_dir: plugins
+
+    # Used as a basic administration tool. Send commands as you would in
+    # chat to the socket via `nc`
+    :domain_socket_path: rubicon.sock
