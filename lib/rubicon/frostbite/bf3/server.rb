@@ -5,7 +5,7 @@ module Rubicon::Frostbite::BF3
         require 'rubicon/frostbite/bf3/signal_handlers'
         require 'rubicon/frostbite/bf3/event_handlers'
 
-        attr_reader :connection, :logger # logger is really only here for event_handlers.
+        attr_reader :connection
         attr_accessor :name, :players, :max_players, :game_mode,
             :current_map, :rounds_played, :rounds_total, :scores,
             :score_target, :online_state, :ranked, :punkbuster,
@@ -14,11 +14,11 @@ module Rubicon::Frostbite::BF3
             :closest_ping_site, :country, :matchmaking,
             :teams, :plugin_manager
 
-        def initialize(connection, config_object)
+        def initialize(connection, config_object, logger)
             @connection = connection
             @config = config_object 
 
-            @logger = Rubicon.logger("BF3Server")
+            @logger = logger
 
             @players = {}
             @teams = []
@@ -33,14 +33,14 @@ module Rubicon::Frostbite::BF3
 
         # Called when successfully connected to a BF3 RCON server
         def connected
-            @logger.debug { "Connected to a BF3 server!" }
+            logger.debug { "Connected to a BF3 server!" }
 
             process_signal(:refresh_server_info)
 
-            @logger.info { "Connected to #{@name}!" }
+            logger.info { "Connected to #{@name}!" }
 
             if !attempt_login
-                @logger.fatal { "Failed to log in!" }
+                logger.fatal { "Failed to log in!" }
                 return false
             end
 
@@ -85,10 +85,10 @@ module Rubicon::Frostbite::BF3
                     end
                     process_signal(command, *args)
                 else
-                    @logger.warn("Discarding unknown message: #{message}")
+                    logger.warn("Discarding unknown message: #{message}")
                 end
             end
-            @logger.debug { "Event pump stopped. Shutting down like a boss."}
+            logger.debug { "Event pump stopped. Shutting down like a boss."}
         end
 
         def shutdown!
@@ -99,7 +99,7 @@ module Rubicon::Frostbite::BF3
             if @@signal_handlers[signal]
                 @@signal_handlers[signal].call(self, *args)
             else
-                @logger.warn { "No handler for signal #{signal}" }
+                logger.warn { "No handler for signal #{signal}" }
             end
         end
 
@@ -108,15 +108,19 @@ module Rubicon::Frostbite::BF3
                 begin
                     @@event_handlers[event.words[0]].call(self, event)
                 rescue Exception => e
-                    @logger.error { "Exception processing event #{event.words[0]}" }
-                    @logger.error { "Offending packet: #{event.inspect}"}
-                    @logger.error "Exception in plugin: #{e.message} (#{e.class})"
-                    @logger.error (e.backtrace || [])[0..10].join("\n")
+                    logger.error { "Exception processing event #{event.words[0]}" }
+                    logger.error { "Offending packet: #{event.inspect}"}
+                    logger.error "Exception in plugin: #{e.message} (#{e.class})"
+                    logger.error (e.backtrace || [])[0..10].join("\n")
                 end
             else
-                @logger.warn { "No handler for packet #{event.words[0]}" }
+                logger.warn { "No handler for packet #{event.words[0]}" }
             end
-        end     
+        end  
+
+        def logger(progname="BF3Server")
+            @logger.with_progname(progname)
+        end   
     end
 
     # Registers our server state manager

@@ -41,11 +41,11 @@ module Rubicon::Frostbite::BF3
                 command = split_up.shift
                 command[0] = '' # remove the /
                 args = { player: player, args: split_up}
-                server.logger.info { "[CMND] <#{player.name}> #{message}" }
+                server.logger.event(:command) { "[CMND] <#{player.name}> #{message}" }
                 server.plugin_manager.dispatch_command(command, args)
             else
                 event_args = {player: player, message: message, audience: audience }
-                server.logger.info { "[CHAT] [#{audience}] <#{player.name}> #{message}" }
+                server.logger.event(:chat) { "[CHAT] [#{audience}] <#{player.name}> #{message}" }
                 server.plugin_manager.dispatch_event(event_name, event_args)
             end
         end
@@ -56,7 +56,7 @@ module Rubicon::Frostbite::BF3
 
             server.players[player_name] ||= Player.new(server, player_name) 
 
-            server.logger.info { "[AUTH] <#{player_name}> has been authenticated!" }
+            server.logger.event(:auth) { "[AUTH] <#{player_name}> has been authenticated!" }
         end
 
         event "player.onJoin" do |server, packet|
@@ -67,7 +67,7 @@ module Rubicon::Frostbite::BF3
             p = (server.players[player] ||= Player.new(server, player, guid))
             p.guid = guid
 
-            server.logger.info { "[JOIN] <#{player}> has joined the server!" }
+            server.logger.event(:join) { "[JOIN] <#{player}> has joined the server!" }
 
             server.plugin_manager.dispatch_event(event_name, { player: p })
         end

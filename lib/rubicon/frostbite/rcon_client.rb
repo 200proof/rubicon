@@ -9,7 +9,7 @@ module Rubicon::Frostbite
         def initialize(config_object)
             super
 
-            @logger = Rubicon.logger("RconClient")
+            @logger = Rubicon::Util::Logger.new(config_object[:log_settings])
 
             @config = config_object
             @active_promises = {}
@@ -24,20 +24,20 @@ module Rubicon::Frostbite
                 begin
                     response = send_request("version")
                     if (response.read_word != "OK")
-                        @logger.fatal("Server appears to be abnormal. Disconnecting")
+                        logger.fatal("Server appears to be abnormal. Disconnecting")
                         close_connection
                     end
 
                     server_game = response.read_word
                     if(@@game_handlers[server_game])
-                        @game_handler = @@game_handlers[server_game].new(self, @config)
+                        @game_handler = @@game_handlers[server_game].new(self, @config, @logger)
                         if @game_handler.connected
                             @game_handler.start_event_pump
                         else
                             close_connection
                         end
                     else
-                        @logger.fatal("No game handler for \"#{server_game}\"! Shutting down.")
+                        logger.fatal("No game handler for \"#{server_game}\"! Shutting down.")
                         close_connection
                     end
                 rescue Exception => e
@@ -53,10 +53,10 @@ module Rubicon::Frostbite
             else
                 # If this gets called before a handler thread is created, it
                 # means that EventMachine failed to connect.
-                @logger.fatal { "Failed to connect! Make sure you entered the correct IP address and port in the config!" }
+                logger.fatal { "Failed to connect! Make sure you entered the correct IP address and port in the config!" }
             end
 
-            @logger.debug { "Connection unbound." }
+            logger.debug { "Connection unbound." }
             Rubicon.disconnected
         end
 
@@ -86,6 +86,10 @@ module Rubicon::Frostbite
             ~ret_promise
         end
 
+        def logger(progname="RconClient")
+            @logger.with_progname(progname)
+        end
+
     private
         def build_packet(words)
             @last_sent_sequence += 1
@@ -93,7 +97,7 @@ module Rubicon::Frostbite
         end
 
         def dispatch_packet(packet)
-            @logger.debug { "<-SEND-  #{packet.inspect}" }
+            logger.debug { "<-SEND-  #{packet.inspect}" }
             send_data packet.encode
         end
 
@@ -138,7 +142,7 @@ module Rubicon::Frostbite
 
                 received_packet = RconPacket.new(sequence, origin, type, *words)
 
-                @logger.debug { " -RECV-> #{received_packet.inspect}" }
+                logger.debug { " -RECV-> #{received_packet.inspect}" }
 
                 # All requests need to be acknowledged with a response
                 dispatch_packet RconPacket.new(sequence, origin, :response, "OK") if type == :request

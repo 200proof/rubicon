@@ -104,7 +104,7 @@ module Rubicon
         # Provides access to the logging system. All logged events
         # will contain the plugin's class name.
         def logger
-            @logger ||= Rubicon.logger(self.class.name)
+            @logger
         end
 
         # To prevent potentially silly things from happening, please do
@@ -114,8 +114,8 @@ module Rubicon
         # to manage your plugin's lifecycle.
         def initialize(server)
             @server = server
+            @logger = server.logger(self.class.name)
             logger.info { "Initialized #{self.class.name}" }
-            enabled
         end
 
         attr_reader :server
