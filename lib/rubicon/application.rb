@@ -46,7 +46,13 @@ module Rubicon
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
 
-            EventMachine.start_unix_domain_server config[:rubicon][:domain_socket_path], Rubicon::Util::DomainSocketConsole
+            if(RbConfig::CONFIG["host_os"] =~ /mswin|mingw|cygwin/)
+                logger("Rubicon").warn ("UNIX domain sockets are not supported on this platform!")
+                logger("Rubicon").warn ("Domain socket administration disabled.")
+            else
+                EventMachine.start_unix_domain_server config[:rubicon][:domain_socket_path], Rubicon::Util::DomainSocketConsole
+            end
+
             EventMachine.connect config[:rubicon][:server], config[:rubicon][:port], Rubicon::Frostbite::RconClient, config[:rubicon][:password]
             
             # stop_checker = proc do
