@@ -85,7 +85,7 @@ module Rubicon::Frostbite::BF3
         "DAO-12"                            => Weapon.new(:dao12),
         "jackhammer"                        => Weapon.new(:mk3a1),
         "M1014"                             => Weapon.new(:m1014),
-        "M26 MASS"                          => Weapon.new(:m26mass),
+        "M26Mass"                          => Weapon.new(:m26mass),
         "Siaga20k"                          => Weapon.new(:saiga),
         "USAS-12"                           => Weapon.new(:usas12),
         "SPAS-12"                           => Weapon.new(:spas12),
@@ -118,7 +118,10 @@ module Rubicon::Frostbite::BF3
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
         "DamageArea"                        => Weapon.new(:crispy) # Standing in fire
     }
-    WEAPONS.default = Weapon.new(:bad_luck)
+    WEAPONS.default_proc = proc do |hash, key|
+        Rubicon.logger("Weapons").warn ("Unknown weapon #{key}. Defaulting to :bad_luck")
+        :bad_luck
+    end
 
     FRIENDLY_NAMES = {
         takedown:           "Knife Takedown",
