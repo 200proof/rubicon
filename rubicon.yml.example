@@ -104,8 +104,6 @@ permissions:
             - admin
             - hacker
 
-        - name: 
-
         # Notice how this user has a permissions field.
         # As such, he will have the `use_hax`and `pwn_noobs`
         # permission in addition to any permission he inherits from
