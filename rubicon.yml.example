@@ -113,3 +113,4 @@ permissions:
             - hacker
           permissions:
             - use_hax
+            - pwn_noobs
