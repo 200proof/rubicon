@@ -11,7 +11,7 @@ class MyTestPlugin < Rubicon::Plugin
     end
 
     event "player.onKill" do
-        logger.info "[KILL] " + "#{killer.name.rjust 16} #{"[#{"🎯 " if headshot?}#{weapon.name}]".center 18} #{victim.name}"
+        logger.info "[KILL] " + "#{killer.name.rjust 16} #{"[#{@crosshair_icon if headshot?}#{weapon.name}]".center 18} #{victim.name}"
     end
 
     event "player.onSuicide" do
