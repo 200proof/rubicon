@@ -14,9 +14,10 @@ module Rubicon::Frostbite::BF3
             :closest_ping_site, :country, :matchmaking,
             :teams, :plugin_manager
 
-        def initialize(connection, password)
+        def initialize(connection, config_object)
             @connection = connection
-            @password = password
+            @config = config_object 
+
             @logger = Rubicon.logger("BF3Server")
 
             @players = {}
@@ -66,7 +67,7 @@ module Rubicon::Frostbite::BF3
         # Hashes a password given a HexString-encoded salt
         def hash_password(salt)
             salt = [salt].pack("H*")
-            salted_password = salt + @password
+            salted_password = salt + @config[:password]
             Digest::MD5.hexdigest(salted_password).upcase
         end
 

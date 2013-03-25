@@ -6,12 +6,12 @@ module Rubicon::Frostbite
 
         attr_accessor :message_channel
 
-        def initialize(password)
+        def initialize(config_object)
             super
 
             @logger = Rubicon.logger("RconClient")
 
-            @password = password
+            @config = config_object
             @active_promises = {}
             @buffer = []
             @last_sent_sequence = 0
@@ -30,7 +30,7 @@ module Rubicon::Frostbite
 
                     server_game = response.read_word
                     if(@@game_handlers[server_game])
-                        @game_handler = @@game_handlers[server_game].new(self, @password)
+                        @game_handler = @@game_handlers[server_game].new(self, @config)
                         if @game_handler.connected
                             @game_handler.start_event_pump
                         else

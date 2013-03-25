@@ -9,7 +9,7 @@ module Rubicon
     end
 
     def self.logger(progname="")
-        @@logger ||= Rubicon::Util::Logger.new(@@config[:rubicon][:log_file], @@config[:rubicon][:log_level])
+        @@logger ||= Rubicon::Util::Logger.new(@@config["rubicon"]["log_file"], @@config["rubicon"]["log_level"])
         @@logger.with_progname(progname)
     end
 
@@ -23,7 +23,7 @@ module Rubicon
         logger("Rubicon").info("Starting Rubicon version #{VERSION}")
         logger("Rubicon").info("Loaded config from #{config[:config_file]}")
 
-        Rubicon::PluginManager.load_plugins(config[:rubicon][:plugins_dir])
+        Rubicon::PluginManager.load_plugins(config["rubicon"]["plugins_dir"])
         @@running_clients = 0
         @@message_channels = []
 
@@ -49,11 +49,28 @@ module Rubicon
             if(RbConfig::CONFIG["host_os"] =~ /mswin|mingw|cygwin/)
                 logger("Rubicon").warn ("UNIX domain sockets are not supported on this platform!")
                 logger("Rubicon").warn ("Domain socket administration disabled.")
+            elsif !config["rubicon"]["domain_socket_path"]
+                logger("Rubicon").debug ("Not starting domain socket listener.")
             else
-                EventMachine.start_unix_domain_server config[:rubicon][:domain_socket_path], Rubicon::Util::DomainSocketConsole
+                EventMachine.start_unix_domain_server config["rubicon"]["domain_socket_path"], Rubicon::Util::DomainSocketConsole
             end
 
-            EventMachine.connect config[:rubicon][:server], config[:rubicon][:port], Rubicon::Frostbite::RconClient, config[:rubicon][:password]
+            config["servers"].each do |server|
+                server_config_object = {
+                    name: server["name"],
+                    password: server["password"],
+                    settings_file: server["config"] || server["name"].gsub(/[^0-9A-z.\-]/, '_'),
+                    log_settings: {
+                        file: server["log_file"] || server["name"].gsub(/[^0-9A-z.\-]/, '_'),
+                        kills: server["log_kills"] || true,
+                        chat: server["log_chat"] || true,
+                        join: server["log_joins"] || true,
+                        other: server["log_other"] || true
+                    }
+                }
+
+                EventMachine.connect server["server"], server["port"], Rubicon::Frostbite::RconClient, server_config_object
+            end
             
             # stop_checker = proc do
             #     EventMachine.stop if @@running_clients == 0
