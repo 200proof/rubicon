@@ -46,6 +46,7 @@ module Rubicon
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
 
+            EventMachine.start_unix_domain_server config[:rubicon][:domain_socket_path], Rubicon::Util::DomainSocketConsole
             EventMachine.connect config[:rubicon][:server], config[:rubicon][:port], Rubicon::Frostbite::RconClient, config[:rubicon][:password]
             
             # stop_checker = proc do

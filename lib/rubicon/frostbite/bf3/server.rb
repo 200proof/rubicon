@@ -73,14 +73,16 @@ module Rubicon::Frostbite::BF3
         # Process signals and events
         def start_event_pump
             while message = @connection.message_channel.receive
-                if (message.is_a? Rubicon::Frostbite::RconPacket)
-                    process_event(message)
-                elsif (message.is_a? Symbol)
-                    if (message == :shutdown)
+                command, *args = message
+                p args if command == :test
+                if (command.is_a? Rubicon::Frostbite::RconPacket)
+                    process_event(command)
+                elsif (command.is_a? Symbol)
+                    if (command == :shutdown)
                         shutdown!
                         break
                     end
-                    process_signal(message)
+                    process_signal(command, *args)
                 else
                     @logger.warn("Discarding unknown message: #{message}")
                 end
@@ -92,9 +94,9 @@ module Rubicon::Frostbite::BF3
             @connection.close_connection
         end
 
-        def process_signal(signal)
+        def process_signal(signal, *args)
             if @@signal_handlers[signal]
-                @@signal_handlers[signal].call(self)
+                @@signal_handlers[signal].call(self, *args)
             else
                 @logger.warn { "No handler for signal #{signal}" }
             end

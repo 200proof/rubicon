@@ -14,6 +14,8 @@ require "rubicon/application"
 # This includes anything that uses a logger.
 module Rubicon
     def self.bootstrap!
+        require "rubicon/util/domain_socket_console"
+        
         require "rubicon/plugin/plugin_manager"
         require "rubicon/plugin/plugin"
 

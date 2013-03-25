@@ -55,5 +55,11 @@ module Rubicon::Frostbite::BF3
 
             server.logger.info { "Refreshed scoreboard! (#{scoreboard.length} players)" }
         end
+
+        signal :console_command do |server, cmd_string|
+            command, *args = cmd_string.gsub("\n", "").split(" ")
+
+            server.plugin_manager.dispatch_command(command, { player: server.players["Server"], args: args })
+        end
     end
 end

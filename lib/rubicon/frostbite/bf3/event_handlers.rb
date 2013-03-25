@@ -41,6 +41,7 @@ module Rubicon::Frostbite::BF3
                 command = split_up.shift
                 command[0] = '' # remove the /
                 args = { player: player, args: split_up}
+                server.logger.info { "[CMND] <#{player.name}> #{message}" }
                 server.plugin_manager.dispatch_command(command, args)
             else
                 event_args = {player: player, message: message, audience: audience }

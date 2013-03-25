@@ -31,7 +31,6 @@ module Rubicon::Frostbite
                     server_game = response.read_word
                     if(@@game_handlers[server_game])
                         @game_handler = @@game_handlers[server_game].new(self, @password)
-                        
                         if @game_handler.connected
                             @game_handler.start_event_pump
                         else

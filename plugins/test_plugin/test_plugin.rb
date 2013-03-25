@@ -6,7 +6,7 @@ class MyTestPlugin < Rubicon::Plugin
         # OS X rocks and has emoji in terminals
         os_x_version = `sw_vers -productVersion` rescue nil
         if os_x_version
-            @crosshair_icon = "\U+1F3AF" if os_x_version.match /^10\.[78]/
+            @crosshair_icon = "\u{1F3AF} " if os_x_version.match /^10\.[78]/
         end
     end
 
