@@ -1,6 +1,7 @@
+# encoding: utf-8
 class MyTestPlugin < Rubicon::Plugin
     event "player.onKill" do
-        logger.info "[KILL] #{killer.name} #{"(+)" if headshot?}[#{weapon.name}] #{victim.name}"
+        logger.info "[KILL] " + "#{killer.name.rjust 16} #{"[#{"🎯 " if headshot?}#{weapon.name}]".center 18} #{victim.name}"
     end
 
     event "player.onSuicide" do

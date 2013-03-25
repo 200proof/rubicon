@@ -43,6 +43,8 @@ module Rubicon::Frostbite::BF3
                 return false
             end
 
+            Rubicon.message_channels << @connection.message_channel
+
             process_signal(:refresh_scoreboard)
 
             @plugin_manager = Rubicon::PluginManager.new(self)
@@ -83,7 +85,11 @@ module Rubicon::Frostbite::BF3
                     @logger.warn("Discarding unknown message: #{message}")
                 end
             end
-            @logger.info { "Event pump stopped. Shutting down like a boss."}
+            @logger.debug { "Event pump stopped. Shutting down like a boss."}
+        end
+
+        def shutdown!
+            @connection.close_connection
         end
 
         def process_signal(signal)

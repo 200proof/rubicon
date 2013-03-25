@@ -20,7 +20,7 @@ module Rubicon::Frostbite::BF3
                 killer_p = server.players[killer]
                 victim_p = server.players[victim]
 
-                killer_p.kills += 1 rescue p "#{killer} nil?"
+                killer_p.kills += 1
 
                 event_args = { killer: killer_p, victim: victim_p, weapon: weapon, headshot?: headshot }
                 server.plugin_manager.dispatch_event("player.onKill", event_args)
@@ -29,12 +29,12 @@ module Rubicon::Frostbite::BF3
 
         event "player.onChat" do |server, packet|
             event_name = packet.read_word
-            player = server.players[packet.read_word]
-            message = packet.read_word
-            audience = packet.read_word
+            player     = server.players[packet.read_word]
+            message    = packet.read_word
+            audience   = packet.read_word
 
             # These are messages sent by other RCons, ignore them.
-            return if player == "Server"
+            next if player.name == "Server"
 
             if message[0] == "/"
                 split_up = message.split " "
@@ -50,7 +50,7 @@ module Rubicon::Frostbite::BF3
         end
 
         event "player.onAuthenticated" do |server, packet|
-            event_name = packet.read_word
+            event_name  = packet.read_word
             player_name = packet.read_word
 
             server.players[player_name] ||= Player.new(server, player_name) 
@@ -60,15 +60,26 @@ module Rubicon::Frostbite::BF3
 
         event "player.onJoin" do |server, packet|
             event_name = packet.read_word
-            player = packet.read_word
-            guid = packet.read_word
+            player     = packet.read_word
+            guid       = packet.read_word
 
-            p = (server[player] ||= Player.new(server, player, guid))
+            p = (server.players[player] ||= Player.new(server, player, guid))
             p.guid = guid
 
             server.logger.info { "[JOIN] <#{player}> has joined the server!" }
 
             server.plugin_manager.dispatch_event(event_name, { player: p })
+        end
+
+        event "player.onSpawn" do |server, packet|
+            event_name  = packet.read_word
+            player_name = packet.read_word
+            team        = packet.read_word.to_i
+
+            player      = server.players[player_name]
+            player.team = team
+
+            server.plugin_manager.dispatch_event(event_name, { player: player })
         end
 
         event "player.onLeave" do |server, packet|
@@ -89,10 +100,12 @@ module Rubicon::Frostbite::BF3
         end
 
         event "player.onSquadChange" do |server, packet|
-            event_name = packet.read_word
-            player     = server.players[packet.read_word]
-            team       = packet.read_word.to_i
-            squad      = packet.read_word.to_i
+            event_name  = packet.read_word
+            player_name = server.players[packet.read_word]
+            team        = packet.read_word.to_i
+            squad       = packet.read_word.to_i
+
+            player      = server.players[player_name] ||= Player.new(server, player_name)
 
             old_squad = player.squad
             player.squad = squad
@@ -108,16 +121,16 @@ module Rubicon::Frostbite::BF3
         end
 
         event "player.onTeamChange" do |server, packet|
-            event_name = packet.read_word
-            player     = server.players[packet.read_word]
-            team       = packet.read_word.to_i
-            squad      = packet.read_word.to_i
+            event_name  = packet.read_word
+            player_name = packet.read_word
+            team        = packet.read_word.to_i
+            squad       = packet.read_word.to_i
 
-            p server.players.keys if player == nil
+            player      = server.players[player_name] ||= Player.new(server, player_name)
 
-            old_team = player.team
+            old_team    = player.team
             player.team = team
-            new_team = player.team
+            new_team    = player.team
 
             event_args = {
                 player: player,
@@ -130,9 +143,18 @@ module Rubicon::Frostbite::BF3
 
         event "punkBuster.onMessage" do |server, packet|
             event_name = packet.read_word
-            message = packet.read_word
+            message    = packet.read_word
 
             server.plugin_manager.dispatch_event(event_name, { message: message })
+        end
+
+        event "server.onMaxPlayerCountChange" do |server, packet|
+            event_name = packet.read_word
+            count      = packet.read_word.to_i
+
+            server.max_players = count
+
+            server.plugin_manager.dispatch_event(event_name, { count: count })
         end
     end
 end

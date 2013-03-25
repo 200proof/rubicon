@@ -52,6 +52,8 @@ module Rubicon::Frostbite::BF3
                 server.players[name].score  = player["score"].to_i
                 server.players[name].rank   = player["rank"].to_i
             end
+
+            server.logger.info { "Refreshed scoreboard! (#{scoreboard.length} players)" }
         end
     end
 end

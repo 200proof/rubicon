@@ -9,7 +9,6 @@ module Rubicon::Frostbite
         def initialize(password)
             super
 
-            Rubicon.connected
             @logger = Rubicon.logger("RconClient")
 
             @password = password
@@ -20,6 +19,7 @@ module Rubicon::Frostbite
         end
 
         def connection_completed
+            Rubicon.connected
             @handler_thread = Thread.new do
                 begin
                     response = send_request("version")
@@ -50,15 +50,15 @@ module Rubicon::Frostbite
 
         def unbind
             if @handler_thread
-                @handler_thread.join
+                @handler_thread.join (10) if @handler_thread.alive?
             else
                 # If this gets called before a handler thread is created, it
                 # means that EventMachine failed to connect.
                 @logger.fatal { "Failed to connect! Make sure you entered the correct IP address and port in the config!" }
             end
 
+            @logger.debug { "Connection unbound." }
             Rubicon.disconnected
-            @logger.debug { "Connection unbound" }
         end
 
         def receive_data(data)

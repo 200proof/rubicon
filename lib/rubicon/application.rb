@@ -5,12 +5,16 @@ module Rubicon
 
     def self.disconnected
         @@running_clients -= 1
-        EventMachine.stop_event_loop if @@running_clients == 0
+        EventMachine.stop_event_loop if @@running_clients < 1
     end
 
     def self.logger(progname="")
         @@logger ||= Rubicon::Util::Logger.new(@@config[:rubicon][:log_file], @@config[:rubicon][:log_level])
         @@logger.with_progname(progname)
+    end
+
+    def self.message_channels
+        @@message_channels
     end
 
     def self.start!(config)
@@ -21,6 +25,17 @@ module Rubicon
 
         Rubicon::PluginManager.load_plugins(config[:rubicon][:plugins_dir])
         @@running_clients = 0
+        @@message_channels = []
+
+        Signal.trap("INT") do
+            puts # just to keep the on-console neat if ^C pops up
+            Thread.new {
+                logger("Rubicon").info ("Received SIGINT, shutting down gracefully.")
+                EM.stop_event_loop if @@running_clients == 0 # User might potentially have to wait if they 
+                                                             # SIGINT while a connection is waiting to time out
+                @@message_channels.each { |channel| channel.send :shutdown }
+            }
+        end
 
         EventMachine.run do
             EventMachine.error_handler do |e|
