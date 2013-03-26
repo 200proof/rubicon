@@ -40,15 +40,31 @@ module Rubicon
         Rubicon::PluginManager.load_plugins(config["rubicon"]["plugins_dir"])
         @@running_clients = 0
         @@message_channels = []
+        @@shutting_down = false
 
         shutdown_proc = proc do
             puts # just to keep the on-console neat if a control char pops up
             Thread.new {
                 logger.info ("Received SIGINT/SIGTERM, shutting down gracefully.")
+                logger.info ("This may take up to 30 seconds.")
+                @@shutting_down = true
+                @@refresh_timer.join(31)
+                @@message_channels.each { |channel| channel.send :shutdown }
                 EM.stop_event_loop if @@running_clients == 0 # User might potentially have to wait if they 
                                                              # SIGINT while a connection is waiting to time out
-                @@message_channels.each { |channel| channel.send :shutdown }
             }
+        end
+
+        # EM::PeriodicTimer seems to block the whole event loop except
+        # on JRuby (tested on MRI 1.9, MRI 2.0, and Rubinius 2.0.0dev)
+        # so I'm using a thread that loops instead
+        @@refresh_timer = Thread.new do
+            while !@@shutting_down
+                logger.debug { "Dispatching :refresh_scoreboard" }
+                message_channels.each { |channel| channel.send :refresh_scoreboard }
+                logger.debug { "All :refresh_scoreboards dispatched" }
+                sleep 15
+            end
         end
 
         Signal.trap "INT", shutdown_proc
@@ -84,7 +100,6 @@ module Rubicon
                         other: server["log_other"] || true
                     }
                 }
-
                 EventMachine.connect server["server"], server["port"], Rubicon::Frostbite::RconClient, server_config_object
             end
             
@@ -96,6 +111,7 @@ module Rubicon
             # stop_checker.call
         end
 
-        logger.debug { "EventMachine reactor stopped" }
+        logger.info ("EventMachine reactor stopped.")
+        logger.info ("Shutdown complete.")
    end
 end
