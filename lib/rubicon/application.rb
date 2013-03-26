@@ -40,7 +40,6 @@ module Rubicon
         Rubicon::PluginManager.load_plugins(config["rubicon"]["plugins_dir"])
         @@running_clients = 0
         @@message_channels = []
-        @@shutting_down = false
 
         shutdown_proc = proc do
             puts # just to keep the on-console neat if a control char pops up
@@ -55,11 +54,11 @@ module Rubicon
             }
         end
 
-        # EM::PeriodicTimer seems to block the whole event loop except
-        # on JRuby (tested on MRI 1.9, MRI 2.0, and Rubinius 2.0.0dev)
+        # EM::PeriodicTimer seems to block the whole event loop except on JRuby 
+        # (tested on MRI 1.9.3, MRI 2.0, and Rubinius 2.0.0dev)
         # so I'm using a thread that loops instead
         @@refresh_timer = Thread.new do
-            while !@@shutting_down
+            until @@shutting_down
                 logger.debug { "Dispatching :refresh_scoreboard" }
                 message_channels.each { |channel| channel.send :refresh_scoreboard }
                 logger.debug { "All :refresh_scoreboards dispatched" }
