@@ -40,6 +40,7 @@ module Rubicon
         Rubicon::PluginManager.load_plugins(config["rubicon"]["plugins_dir"])
         @@running_clients = 0
         @@message_channels = []
+        @@shutting_down = false
 
         shutdown_proc = proc do
             puts # just to keep the on-console neat if a control char pops up
@@ -101,13 +102,6 @@ module Rubicon
                 }
                 EventMachine.connect server["server"], server["port"], Rubicon::Frostbite::RconClient, server_config_object
             end
-            
-            # stop_checker = proc do
-            #     EventMachine.stop if @@running_clients == 0
-            #     EventMachine.next_tick(stop_checker)
-            # end
-
-            # stop_checker.call
         end
 
         logger.info ("EventMachine reactor stopped.")

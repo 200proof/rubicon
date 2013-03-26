@@ -6,7 +6,8 @@ require "thread/promise"
 
 require "rubicon/version"
 
-require "rubicon/util/method_delegator"
+require "rubicon/util/config"
+# require "rubicon/util/method_delegator"
 require "rubicon/util/logger"
 require "rubicon/application"
 

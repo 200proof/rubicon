@@ -17,7 +17,7 @@ unless File.exists?(config_file) && File.readable?(config_file)
     exit! 1
 end
 
-config = YAML::load_file(config_file)
+config = Rubicon::Util::ConfigManager.new(config_file)
 config[:config_file] = config_file
 Rubicon::start!(config)
 
