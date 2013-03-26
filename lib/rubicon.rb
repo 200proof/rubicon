@@ -4,6 +4,11 @@ require "logger"
 require "thread/channel"
 require "thread/promise"
 
+# pretty colors
+if RbConfig::CONFIG["host_os"] =~ /mswin|mingw|cygwin/
+    require "win32console"
+end
+
 require "rubicon/version"
 
 require "rubicon/util/config"
