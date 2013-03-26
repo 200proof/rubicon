@@ -15,6 +15,9 @@ module Rubicon::Frostbite::BF3
 
             if (killer == "") || (killer == victim)
                 event_args = { player: server.players[victim], weapon: weapon }
+
+                server.logger.event(:suicide) { "[SCDE] #{victim} killed themselves via #{weapon.name}" }
+
                 server.plugin_manager.dispatch_event("player.onSuicide", event_args)
             else
                 killer_p = server.players[killer]
@@ -23,6 +26,9 @@ module Rubicon::Frostbite::BF3
                 killer_p.kills += 1
 
                 event_args = { killer: killer_p, victim: victim_p, weapon: weapon, headshot?: headshot }
+
+                server.logger.event(:kill) { "[KILL] " + "#{killer} <#{"(*)" if headshot}#{weapon.name}> #{victim}" }
+
                 server.plugin_manager.dispatch_event("player.onKill", event_args)
             end
         end
@@ -54,7 +60,7 @@ module Rubicon::Frostbite::BF3
             event_name  = packet.read_word
             player_name = packet.read_word
 
-            server.players[player_name] ||= Player.new(server, player_name) 
+            server.players[player_name] ||= Player.new(server, player_name)
 
             server.logger.event(:auth) { "[AUTH] <#{player_name}> has been authenticated!" }
         end
@@ -80,6 +86,8 @@ module Rubicon::Frostbite::BF3
             player      = server.players[player_name]
             player.team = team
 
+            server.logger.event(:spawn) { "[SPWN] <#{player_name}> has spawned." }
+
             server.plugin_manager.dispatch_event(event_name, { player: player })
         end
 
@@ -96,6 +104,8 @@ module Rubicon::Frostbite::BF3
                 player_name:  player_name,
                 player_stats: player_stats
             }
+
+            server.logger.event(:leave) { "[EXIT] <#{player_name}> has left the server!" }
 
             server.plugin_manager.dispatch_event(event_name, event_args)
         end

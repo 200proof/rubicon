@@ -120,7 +120,7 @@ module Rubicon::Frostbite::BF3
     }
     WEAPONS.default_proc = proc do |hash, key|
         Rubicon.logger("Weapons").warn ("Unknown weapon #{key}. Defaulting to :bad_luck")
-        :bad_luck
+        Weapon.new(:bad_luck)
     end
 
     FRIENDLY_NAMES = {
