@@ -7,7 +7,15 @@ module Rubicon
         end
 
         def self.load_plugins(plugins_directory)
-            Dir.glob(File.expand_path(plugins_directory + "/*/*.rb", Dir.getwd)) { |f| require f }
+            Dir.glob(File.expand_path(plugins_directory + "/*/*.rb", Dir.getwd)) do |f|
+                begin
+                    require f 
+                rescue SyntaxError => error
+                    @@logger.error { "Syntax error in plugin #{f}" }
+                    @@logger.error { "#{error.message}" }
+                    @@logger.error (error.backtrace || [])[0..10].join("\n")
+                end
+            end
 
             @@loaded_plugins.each_with_index do |klass, idx|
                 if (klass.instance_method(:initialize).owner != Rubicon::Plugin)
