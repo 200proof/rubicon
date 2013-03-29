@@ -85,7 +85,7 @@ module Rubicon::Frostbite::BF3
         "DAO-12"                            => Weapon.new(:dao12),
         "jackhammer"                        => Weapon.new(:mk3a1),
         "M1014"                             => Weapon.new(:m1014),
-        "M26Mass"                          => Weapon.new(:m26mass),
+        "M26Mass"                           => Weapon.new(:m26mass),
         "Siaga20k"                          => Weapon.new(:saiga),
         "USAS-12"                           => Weapon.new(:usas12),
         "SPAS-12"                           => Weapon.new(:spas12),

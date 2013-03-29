@@ -33,7 +33,7 @@ module Rubicon
         #
         # event "player.onKill" do
         #     if weapon == :knife
-        #       server.say "#{killer} just knifed #{victim}!"
+        #       server.say "#{killer.name} just knifed #{victim.name}!"
         #       server.say "And it landed right in the face!" if headshot?
         #     end
         # end
@@ -101,12 +101,11 @@ module Rubicon
         def disabled
         end
 
-        # Lets the DSL access the server which this plugin is running on.
-        # Additionally, since the plugin can only run on one thread at any
-        # given time, a mutex is used to enforce this. 
-        # Plugin#mutex should not be overridden, and any plugin that violates this
+        # Lets the DSL access the server which this plugin is running on
+        # as well as the logger instance for this plugin
+        # Plugin#logger should not be overridden, and any plugin that violates this
         # will not be loaded.
-        attr_reader :server, :mutex
+        attr_reader :server, :logger
 
         # To prevent potentially silly things from happening, please do
         # not implement a constructor using `initialize`. The plugin
@@ -117,14 +116,7 @@ module Rubicon
         def initialize(server)
             @server = server
             @logger = server.logger(self.class.name)
-            @mutex = Mutex.new
             logger.info { "Initialized #{self.class.name}" }
-        end
-
-        # Provides access to the logging system. All logged events
-        # will contain the plugin's class name.
-        def logger
-            @logger
         end
 
         # To make the DSL more elegant, the event and command blocks do not take arguments.

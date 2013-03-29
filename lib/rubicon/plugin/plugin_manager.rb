@@ -6,6 +6,8 @@ module Rubicon
             @@loaded_plugins
         end
 
+        # Loads plugins from the directory specified in the config, rejecting any that
+        # misbehave by overriding methods they shouldn't.
         def self.load_plugins(plugins_directory)
             Dir.glob(File.expand_path(plugins_directory + "/*/*.rb", Dir.getwd)) do |f|
                 begin
@@ -17,7 +19,7 @@ module Rubicon
                 end
             end
 
-            non_overridable_methods = [:initialize, :current_args=, :mutex]
+            non_overridable_methods = [:initialize, :current_args=, :server, :logger]
             @@loaded_plugins.each do |name, klass|
                 rejected = false
 
@@ -33,6 +35,8 @@ module Rubicon
             end
         end
 
+        # Creates a new PluginManager tied to a specific
+        # server instance
         def initialize(server)
             @active_plugins = {}
             @enabled_plugins = {}
@@ -71,6 +75,8 @@ module Rubicon
             @@logger.error (e.backtrace || [])[0..10].join("\n")
         end
 
+        # Enables a plugin, registering all of its listener
+        # and calls its `enabled` initializer
         def enable_plugin(plugin_name)
             if @enabled_plugins[plugin_name]; server.logger.warn("#{plugin_name} is already enabled!"); return; end
             plugin = @active_plugins[plugin_name]
@@ -79,6 +85,8 @@ module Rubicon
             @enabled_plugins[plugin_name] = plugin
         end
 
+        # Disables a plugin, removing any active listeners
+        # and calling it to clean itself up.
         def disable_plugin(plugin_name)
             if (plugin_instance = @enabled_plugins[plugin_name])
                 plugin_instance.disable

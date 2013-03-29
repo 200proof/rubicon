@@ -31,7 +31,7 @@ module Rubicon::Util
                 spacer = " "*prefix.length
 
                 # Push any further lines so they align with the rest of the message
-                msg = msg.lines.each_with_index.map { |line, lnum| line = (lnum > 0 ? "#{spacer}#{line}" : line) }.join
+                msg = msg.lines.each_with_index { |line, lnum| line = (lnum > 0 ? "#{spacer}#{line}" : line) }.join
 
                 @@console_mutex.synchronize { puts "#{prefix}#{msg}".colorize(COLORS[level]) }
                 "#{prefix}#{msg}\n"
