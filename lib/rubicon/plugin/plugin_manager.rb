@@ -39,61 +39,112 @@ module Rubicon
         # server instance
         def initialize(server)
             @active_plugins = {}
-            @enabled_plugins = {}
-            @worker_poll = Thread::Pool.new(5)
+
+            # plugin.name => message channel (for shutdown)
+            @plugin_message_channels = {}
+
+            # plugin.name => worker thread
+            @plugin_worker_threads = {}
+
+            # eventName => array of message channels
+            # of plugins that listen to the event
+            @event_message_channels = {}
+            @event_message_channels.default_proc = proc do |hash, key|
+                hash[key] = []
+            end
+
+            # commandName => array of message channels
+            # of plugins that listen to the command
+            @command_message_channels = {}
+            @command_message_channels.default_proc = proc do |hash, key|
+                hash[key] = []
+            end
 
             @@loaded_plugins.each do |name, klass|
                 plugin = klass.new(server)
                 @active_plugins[klass.name] = plugin
-                enable_plugin(name)
+                enable_plugin(klass.name)
             end
         end
 
         # Dispatches an event to any plugins that listen to it.
         def dispatch_event(event_name, args)
-            @enabled_plugins.values.each do |plugin_instance|
-                if(event_handler_name = plugin_instance.class.event_handlers[event_name])
-                    plugin_instance.current_args = args
-                    plugin_instance.send event_handler_name
-                end
+            @event_message_channels[event_name].each do |message_channel|
+                message_channel.send [:event, event_name, args]
             end
-        rescue Exception => e
-            @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
-            @@logger.error (e.backtrace || [])[0..10].join("\n")
         end
 
         # Dispatches a command to any plugins that listen to it.
         def dispatch_command(command_name, args)
-            @enabled_plugins.values.each do |plugin_instance|
-                if(command_handler_name = plugin_instance.class.command_handlers[command_name.to_sym])
-                    plugin_instance.current_args = args
-                    plugin_instance.send command_handler_name
-                end
+            @command_message_channels[command_name].each do |message_channel|
+                message_channel.send [:command, command_name, args]
             end
-        rescue Exception => e
-            @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
-            @@logger.error (e.backtrace || [])[0..10].join("\n")
         end
 
         # Enables a plugin, registering all of its listener
         # and calls its `enabled` initializer
         def enable_plugin(plugin_name)
-            if @enabled_plugins[plugin_name]; server.logger.warn("#{plugin_name} is already enabled!"); return; end
-            plugin = @active_plugins[plugin_name]
+            if @plugin_message_channels[plugin_name]; server.logger.warn("#{plugin_name} is already enabled!"); return; end
+            unless @active_plugins[plugin_name]; server.logger.error("#{plugin_name} is not a loaded plugin!"); return; end
+
+            channel = @plugin_message_channels[plugin_name] = Thread::Channel.new
+            plugin  = @active_plugins[plugin_name]
+
+            # Enabled callback
             plugin.enabled
 
-            @enabled_plugins[plugin_name] = plugin
+            plugin.class.event_handlers.each_key do |event_name|
+                @event_message_channels[event_name] << channel
+            end
+
+            plugin.class.command_handlers.each_key do |command_name|
+                @command_message_channels[command_name] << channel
+            end
+
+            @plugin_worker_threads[plugin_name] = Thread.new do
+                while message = channel.receive
+                    break if message == :stop
+
+                    begin
+                        type, *params = message
+
+                        if type == :command
+                            command_name = params.shift
+                            plugin.current_args = params.shift
+                            plugin.send plugin.class.command_handlers[command_name]
+                        elsif type == :event
+                            event_name = params.shift
+                            plugin.current_args = params.shift
+                            plugin.send plugin.class.event_handlers[event_name]
+                        else
+                            @logger.error { "#{type} is not a valid plugin message!" }
+                        end
+                    rescue Exception => e
+                        @@logger.error "Exception in plugin: #{e.message} (#{e.class})"
+                        @@logger.error (e.backtrace || [])[0..10].join("\n")
+                    end
+                end
+            end
         end
 
         # Disables a plugin, removing any active listeners
         # and calling it to clean itself up.
         def disable_plugin(plugin_name)
-            if (plugin_instance = @enabled_plugins[plugin_name])
-                plugin_instance.disable
-                @enabled_plugins.delete plugin_name
-            else
-                server.logger.warn("#{plugin_name} is not active!")
+            plugin  = @active_plugins[plugin_name]
+            channel = @plugin_message_channels[plugin_name]
+
+            plugin.class.event_handlers.each_key do |event_name|
+                @event_message_channels[event_name].delete channel
             end
+
+            plugin.class.command_handlers.each_key do |command_name|
+                @command_message_channels[command_name].delete channel
+            end
+
+            @plugin_message_channels[plugin_name].send :stop
+
+            # disable the plugin
+            plugin.disabled
         end
     end
 end
