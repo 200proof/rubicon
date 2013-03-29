@@ -3,6 +3,7 @@ require "logger"
 
 require "thread/channel"
 require "thread/promise"
+require "thread/pool"
 
 # pretty colors
 if RbConfig::CONFIG["host_os"] =~ /mswin|mingw|cygwin/
@@ -12,16 +13,13 @@ end
 require "rubicon/version"
 
 require "rubicon/util/config"
-# require "rubicon/util/method_delegator"
 require "rubicon/util/logger"
 require "rubicon/application"
 
 # Call this to load anything else that depends on the configuration
 # This includes anything that uses a logger.
 module Rubicon
-    def self.bootstrap!
-        require "rubicon/util/domain_socket_console"
-        
+    def self.bootstrap!        
         require "rubicon/plugin/plugin_manager"
         require "rubicon/plugin/plugin"
 

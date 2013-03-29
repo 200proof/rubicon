@@ -5,13 +5,6 @@ rubicon:
     # using different plugin sets for different Rubicon instances
     plugins_dir: plugins
 
-    # If you're running on a POSIX compliant platform, you can
-    # administer your server via a simple `echo | nc` to a domain socket!
-    # !! This will never be supported on Windows. !!
-    #
-    # Uncomment below to enable. 
-    #domain_socket_path: rubicon.sock
-
     # The log level represents the verbosity of the application.
     # A lower value will print out more information, (i.e. level 2
     # will also print out any information in levels 3, 4, and 5)

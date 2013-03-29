@@ -20,19 +20,18 @@ module Rubicon::Frostbite::BF3
 
             @logger = logger
 
-            @players = {}
             @teams = []
 
             # 0 = neutral, 16 possible teams
             17.times do |idx|
                 @teams[idx] = Team.new(self, idx)
             end
-
-            @players["Server"] = SpecialPlayer.new(self, "Server")
         end
 
         # Called when successfully connected to a BF3 RCON server
         def connected
+            @players = PlayerCollection.new(self)
+
             logger.debug { "Connected to a BF3 server!" }
 
             process_signal(:refresh_server_info)
@@ -44,7 +43,7 @@ module Rubicon::Frostbite::BF3
                 return false
             end
 
-            Rubicon.message_channels << @connection.message_channel
+            Rubicon.message_channels[@config[:name]] = @connection.message_channel
 
             process_signal(:refresh_scoreboard)
 
@@ -110,7 +109,7 @@ module Rubicon::Frostbite::BF3
                 rescue Exception => e
                     logger.error { "Exception processing event #{event.words[0]}" }
                     logger.error { "Offending packet: #{event.inspect}"}
-                    logger.error "Exception in plugin: #{e.message} (#{e.class})"
+                    logger.error { "Exception in plugin: #{e.message} (#{e.class})" }
                     logger.error (e.backtrace || [])[0..10].join("\n")
                 end
             else

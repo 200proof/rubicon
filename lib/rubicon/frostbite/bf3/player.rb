@@ -1,4 +1,22 @@
 module Rubicon::Frostbite::BF3
+
+    # Allows us to have a special player object for any events which are 
+    # emitted by the game server without it polluting the actual collection.
+    class PlayerCollection < Hash
+        def initialize(server)
+            @server_player = SpecialPlayer.new(server, "Server")
+            super()
+        end
+
+        def [](key)
+            key == "Server" ? @server_player : super(key)
+        end
+
+        def []=(key, value)
+            key == "Server" ? value : super(key, value)
+        end
+    end
+
     class Player
         NO_GUID = "NO_GUID"
 
