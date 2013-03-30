@@ -142,6 +142,14 @@ module Rubicon::Frostbite::BF3
             squad.remove @name
             team.remove @name
         end
+
+        def has_permission?(perm_name)
+            @server.permissions_manager.player_has_permission?(@name, perm_name)
+        end
+
+        def belongs_to_group?(group_name)
+            @server.permissions_manager.player_belongs_to_group?(@name, group_name)
+        end
     end
 
     # A special player is used for any commands or events sent by the console or the

@@ -14,6 +14,7 @@ require "rubicon/version"
 
 require "rubicon/util/config"
 require "rubicon/util/logger"
+require "rubicon/util/permissions"
 require "rubicon/application"
 
 # Call this to load anything else that depends on the configuration

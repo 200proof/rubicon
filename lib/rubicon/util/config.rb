@@ -17,7 +17,7 @@ module Rubicon::Util
         end
 
         def [](key)
-            @wrappers[key] ||= ConfigWrapper.new(self, key, @config[k])
+            @wrappers[key] 
         end
 
         def []=(key, value)

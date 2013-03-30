@@ -5,7 +5,7 @@ module Rubicon::Frostbite::BF3
         require 'rubicon/frostbite/bf3/signal_handlers'
         require 'rubicon/frostbite/bf3/event_handlers'
 
-        attr_reader :connection
+        attr_reader :connection, :settings, :permissions_manager
         attr_accessor :name, :players, :max_players, :game_mode,
             :current_map, :rounds_played, :rounds_total, :scores,
             :score_target, :online_state, :ranked, :punkbuster,
@@ -14,9 +14,13 @@ module Rubicon::Frostbite::BF3
             :closest_ping_site, :country, :matchmaking,
             :teams, :plugin_manager
 
+        # TODO: refactor @config and @settings to be less
+        # confusing
         def initialize(connection, config_object, logger)
             @connection = connection
             @config = config_object 
+            @settings = Rubicon::Util::ConfigManager.new(config_object[:settings_file])
+            @permissions_manager = Rubicon::Util::PermissionsManager.new(@settings["permissions"] || {})
 
             @logger = logger
 

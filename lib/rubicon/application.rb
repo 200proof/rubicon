@@ -49,6 +49,8 @@ module Rubicon
         logger.info("Loaded config from #{config[:config_file]}")
 
         Rubicon::PluginManager.load_plugins(config["rubicon"]["plugins_dir"])
+
+        Rubicon::Util::PermissionsManager.set_global_permissions(@@config["permissions"])
         @@running_clients = 0
         @@message_channels = {}
         @@shutting_down = false
