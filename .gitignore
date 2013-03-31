@@ -24,3 +24,6 @@ doc/
 # Rubicon configuration specifics
 *.yml
 *.log
+
+# Web UI cache files
+.sass-cache/

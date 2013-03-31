@@ -25,15 +25,24 @@ module Rubicon
         @@message_channels
     end
 
+    def self.web_ui_config
+        @@config["webui"]
+    end
+
     def self.shutdown!
         return if @@shutting_down # last server to disconnect may end up calling this, no need to run it again
 
         logger.info ("Shutting down. This may take up to 30 seconds.")
+        @@thin_instance.stop!
         @@shutting_down = true
-        unless @@refresh_timer.join(31); @@refresh_timer.kill; end
+        # TODO: change me back to a normal value when i'm done deving
+        unless @@refresh_timer.join(2); @@refresh_timer.kill; end
         @@message_channels.each_value { |channel| channel.send(:shutdown); }
         EM.stop_event_loop # User might potentially have to wait if we 
                            # shutdown while a connection is waiting to time out
+    rescue Exception => e
+        logger.fatal ("Exception shutting down! #{e.message} (#{e.class})")
+        logger.fatal (e.backtrace || [])[0..10].join("\n") 
     end
 
     def self.start!(config)
@@ -83,6 +92,9 @@ module Rubicon
                 logger("EM").error "Exception during event: #{e.message} (#{e.class})"
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
+
+            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false
+            @@thin_instance.start
 
             config["servers"].each do |server|
                 server_config_object = {

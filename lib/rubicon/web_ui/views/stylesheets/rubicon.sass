@@ -1,0 +1,42 @@
+@import "compass/css3/box-shadow"
+@import "compass/css3/border-radius"
+
+html, body
+    height: 100%
+
+#wrap
+    min-height: 100%
+    height: auto !important
+    height: 100%
+    margin: 0 auto -40px
+
+    > .container
+        padding-top: 60px
+
+/* Set the fixed height of the footer here */
+#push, footer
+    height: 40px
+
+footer p
+    text-align: center
+
+.form-signin
+    max-width: 50%
+    padding: 19px 29px 29px
+    margin: 0 auto 20px
+    background-color: #fff
+    border: 1px solid #e5e5e5
+    +border-radius(5px)
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05)
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05)
+    box-shadow: 0 1px 2px rgba(0,0,0,.05)
+
+.form-signin .form-signin-heading, .form-signin .checkbox 
+    margin-bottom: 10px
+
+.form-signin input[type="text"], .form-signin input[type="password"] 
+    font-size: 16px
+    height: auto
+    margin-bottom: 15px
+    padding: 7px 9px
+      

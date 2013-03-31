@@ -5,6 +5,9 @@ require "thread/channel"
 require "thread/promise"
 require "thread/pool"
 
+require "sinatra"
+require "thin"
+
 # pretty colors
 if RbConfig::CONFIG["host_os"] =~ /mswin|mingw|cygwin/
     require "win32console"
@@ -32,5 +35,8 @@ module Rubicon
         require "rubicon/frostbite/bf3/team.rb"
         require "rubicon/frostbite/bf3/squad.rb"
         require "rubicon/frostbite/bf3/weapon.rb"
+
+        require "rubicon/web_ui/thin_logging_patch"
+        require "rubicon/web_ui/web_ui"
     end
 end

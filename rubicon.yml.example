@@ -14,59 +14,34 @@ rubicon:
     # 2 will print warnings
     # 3 will print errors
     # 4 will print FATAL errors (those causing shutdown)
-    # 5 will print out any information that transcends the
-    #   space-time continuum
     #
     # It is recommended to leave this value at 1
     log_level: 1
 
-# This is where servers which are to be managed are configured.
-servers:
-    - name:       server1       # A short identifier for your server. This is used internally.     
+    # This is where any log events not specific to a server will go
+    log_file: rubicon.log
 
-      server:     98.76.54.32   # The IP address or hostname of your RCON server.
+# The `webui` namespace configures the behavior of the web administration
+# panel, such as the ip:port/UNIX socket it listens for connections on
+webui:
+    # To prevent session spoofing which would allow a malicious user to access,
+    # the web UI, change the secret to something unique.
+    session_secret: "Change me to something unique, unless you're a total twat!"
 
-      port:       12345         # The port on which your RCON server is awaiting connections.
-
-      password:   supersecretyo # The password to your RCON server.
-
-      config:     the_best.yml  # This is where plugins will store their data.
-                                # Additionally, you may also specify any custom permissions on a
-                                # per-server basis in that file. It will default to `<name>.log` 
-                                # in the same directory as the global config file, where <name>
-                                # is the name field specified above
-
-      log_file:   the_best.log  # Where to save this server's logs. If this is left blank,
-                                # the log file for this server will default to `<name>.yml` 
-                                # in the same directory as the global log file, where <name>
-                                # is the name field specified above. 
-
-      log_kills:  Yes           # Whether or not to log kills and deaths.
-                                # If this is left out, it will default to Yes
-                                # Any such events will still show up in the console.
-
-      log_chat:   Yes           # Whether or not to log chat messages.
-                                # Like log_kills, this defaults to Yes
-                                # Chat messages will still show up in the console.
-
-      log_joins:  Yes           # Whether or not to log players joining and leaving the server
-                                # This also defaults to Yes, and yes, you guessed it, the event
-                                # still shows up in the console regardless of the setting.
-
-      log_other:  Yes           # Whether or not to log other events such as team/squad changes,
-                                # round start/end, etc. This setting has the same behavior as the
-                                # previous options.
-
-      # Another example. Note how a specific log file is not given.
-      # As such, This server's logs will go into `test2.log`, and
-      # it will grab its config from `test2.yml`. It will NOT
-      # log "other" events, however, as the option has been
-      # explicitly set to No
-    - name:      test2
-      server:    123.45.67.89
-      port:      54321
-      password:  topsecretyo
-      log_other: No
+    # What interface/port the web UI will listen for connections. If you know
+    # what you're doing, you can uncomment "socket" to have the server listen
+    # on a UNIX domain socket.
+    listen:
+        ip: 0.0.0.0
+        port: 9001
+        #socket: rubicon-webui.sock
+        
+    # This stores all users and their passwords which have access to
+    # the Rubicon web administration panel. Needless to say, you should
+    # change these defaults.
+    users:
+        - name: admin
+          password: admin
 
 # Here you can specify usergroups. 
 # These permissions will be applied to every server.

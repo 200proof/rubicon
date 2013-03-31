@@ -1,0 +1,18 @@
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="/">Rubicon</a>
+      <% if username = current_user %>
+        <ul class="nav">
+            <li><a>Thick</a></li>
+            <li><a>Sauce</a></li>
+        </ul>
+
+        <ul class="nav pull-right">
+            <li><a>Hello, <%= username %>!</a></li>
+            <li><a href="/logout"><i class="icon-signout"></i> Log Out</a></li>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+</div>

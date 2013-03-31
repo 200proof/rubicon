@@ -1,3 +1,3 @@
 module Rubicon
-    VERSION = "0.0.1"
+    VERSION = "0.7.5"
 end
