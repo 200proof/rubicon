@@ -21,6 +21,12 @@ rubicon:
     # This is where any log events not specific to a server will go
     log_file: rubicon.log
 
+servers:
+    - name:       my_server
+      server:     123.45.67.89
+      port:       12345
+      password:   my_secret_rcon_password
+
 # The `webui` namespace configures the behavior of the web administration
 # panel, such as the ip:port/UNIX socket it listens for connections on
 webui:
