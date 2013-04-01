@@ -20,7 +20,6 @@ module Rubicon::Util
         def initialize(log_settings)
             @wrappers = {}
             @settings = log_settings
-            @src = log_settings[:prefix]
             @listener_streams = []
 
             log_file = File.open(log_settings[:file], "a+")
@@ -29,12 +28,8 @@ module Rubicon::Util
             @logger.formatter = proc do |level, datetime, progname, msg|
                 progname ||= ""
                 level = "EVENT" if level == "ANY"
-                prefix = "#{@src.rjust 10}: [#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(15)+" " if !progname.empty?} "
+                prefix = "#{@settings[:prefix].rjust 10}: [#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(15)+" " if !progname.empty?} "
                 spacer = " "*prefix.length
-
-                @listener_streams.each do |stream|
-                    stream.push event: "log", data: JSON::dump({level: level, datetime: datetime, progname: progname, msg: msg})
-                end
 
                 # Push any further lines so they align with the rest of the message
                 msg = (msg.lines.each_with_index.map { |line, lnum| line = (lnum > 0 ? "#{spacer}#{line}" : line) }).join
@@ -45,12 +40,24 @@ module Rubicon::Util
         end
 
         def event(event_name, message=nil, progname, &block)
-            # TODO: check if event is to be logged
-            @logger.add(::Logger::UNKNOWN, message, progname, &block)
+            msg = message || block.call
+            @listener_streams.each do |stream|
+                    stream.push event: "event", data: JSON::dump({event: event_name, time: Time.now.to_s, progname: progname, msg: msg})
+            end
+
+            if @settings[:events]
+                @logger.add(::Logger::UNKNOWN, msg, progname)
+            end
         end
 
         def message(level, message, progname, &block)
             @logger.add(level, message, progname, &block)
+
+            if level > ::Logger::DEBUG
+                @listener_streams.each do |stream|
+                        stream.push event: "log", data: JSON::dump({level: level, time: Time.now.to_s, progname: progname, msg: message})
+                end
+            end
         end
 
         def with_progname(name)

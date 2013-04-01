@@ -105,10 +105,7 @@ module Rubicon
                         prefix: server["name"],
                         level: @@log_level,
                         file: server["log_file"] || server["name"].gsub(/[^0-9A-z.\-]/, '_')+".log",
-                        kills: server["log_kills"] || true,
-                        chat: server["log_chat"] || true,
-                        join: server["log_joins"] || true,
-                        other: server["log_other"] || true
+                        events: server["log_events"] || true
                     }
                 }
                 EventMachine.connect server["server"], server["port"], Rubicon::Frostbite::RconClient, server_config_object
