@@ -21,8 +21,8 @@ module Rubicon
         @@logger.with_progname(progname)
     end
 
-    def self.message_channels
-        @@message_channels
+    def self.servers
+        @@server_instances
     end
 
     def self.web_ui_config
@@ -37,7 +37,7 @@ module Rubicon
         @@shutting_down = true
         # TODO: change me back to a normal value when i'm done deving
         unless @@refresh_timer.join(2); @@refresh_timer.kill; end
-        @@message_channels.each_value { |channel| channel.send(:shutdown); }
+        servers.each_value { |server| server.message_channel.send(:shutdown); }
         EM.stop_event_loop # User might potentially have to wait if we 
                            # shutdown while a connection is waiting to time out
     rescue Exception => e
@@ -61,7 +61,7 @@ module Rubicon
 
         Rubicon::Util::PermissionsManager.set_global_permissions(@@config["permissions"])
         @@running_clients = 0
-        @@message_channels = {}
+        @@server_instances = {}
         @@shutting_down = false
 
         shutdown_proc = proc do
@@ -78,7 +78,7 @@ module Rubicon
         @@refresh_timer = Thread.new do
             until @@shutting_down
                 logger.debug { "Dispatching :refresh_scoreboard" }
-                message_channels.each_value { |channel| channel.send :refresh_scoreboard }
+                servers.each_value { |server| server.message_channel.send :refresh_scoreboard }
                 logger.debug { "All :refresh_scoreboards dispatched" }
                 sleep 15
             end

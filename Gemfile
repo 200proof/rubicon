@@ -12,6 +12,7 @@ gem "sass", "~> 3.2.7"
 gem "compass", "~> 0.12.2"
 gem "coffee-script", "~> 2.2.0"
 gem "sinatra-flash", "~> 0.3.0"
+gem "sinatra-sse", "0.1"
 
 # Pretty colors
 gem "colorize", "~> 0.5.8"

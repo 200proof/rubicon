@@ -47,7 +47,7 @@ module Rubicon::Frostbite::BF3
                 return false
             end
 
-            Rubicon.message_channels[@config[:name]] = @connection.message_channel
+            Rubicon.servers[@config[:name]] = self
 
             process_signal(:refresh_scoreboard)
 
@@ -123,7 +123,19 @@ module Rubicon::Frostbite::BF3
 
         def logger(progname="BF3Server")
             @logger.with_progname(progname)
+        end
+
+        def add_web_logger(stream)
+            @logger.add_web_listener(stream)
         end   
+        
+        def remove_web_logger(stream)
+            @logger.remove_web_listener(stream)
+        end
+
+        def message_channel
+            @connection.message_channel
+        end
     end
 
     # Registers our server state manager

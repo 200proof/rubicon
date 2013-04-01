@@ -1,4 +1,5 @@
 require "colorize"
+require "json"
 
 module Rubicon::Util
     # Creates wrappers around ruby's Logger to automatically place a `progname`
@@ -20,6 +21,7 @@ module Rubicon::Util
             @wrappers = {}
             @settings = log_settings
             @src = log_settings[:prefix]
+            @listener_streams = []
 
             log_file = File.open(log_settings[:file], "a+")
             @logger = ::Logger.new(log_file)
@@ -29,6 +31,10 @@ module Rubicon::Util
                 level = "EVENT" if level == "ANY"
                 prefix = "#{@src.rjust 10}: [#{datetime.strftime "%Y-%m-%d %H:%M:%S"}] [#{level.ljust 5}]#{" "+progname.ljust(15)+" " if !progname.empty?} "
                 spacer = " "*prefix.length
+
+                @listener_streams.each do |stream|
+                    stream.push event: "log", data: JSON::dump({level: level, datetime: datetime, progname: progname, msg: msg})
+                end
 
                 # Push any further lines so they align with the rest of the message
                 msg = (msg.lines.each_with_index.map { |line, lnum| line = (lnum > 0 ? "#{spacer}#{line}" : line) }).join
@@ -53,6 +59,14 @@ module Rubicon::Util
 
         def close
             @logger.close
+        end
+
+        def add_web_listener(stream)
+            @listener_streams << stream
+        end
+
+        def remove_web_listener(stream)
+            @listener_streams.delete stream
         end
     end
 

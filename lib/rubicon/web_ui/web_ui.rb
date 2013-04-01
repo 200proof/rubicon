@@ -2,9 +2,12 @@ require "sass"
 require "compass"
 require "coffee-script"
 require "sinatra/flash"
+require "sinatra/sse"
 
 module Rubicon::WebUI
     class WebUIApp < Sinatra::Base
+        include Sinatra::SSE
+
         configure do
             Compass.configuration do |config|
                 config.project_path = File.dirname(__FILE__)
@@ -80,6 +83,18 @@ module Rubicon::WebUI
 
             content_type 'text/css', :charset => 'utf-8'
             coffee :"javascripts/#{params[:name]}"
+        end
+
+        get "/logstream/:server" do
+            p params[:server]
+            if rbcserver = Rubicon.servers[params[:server]]
+                sse_stream do |stream|
+                    rbcserver.add_web_logger(stream)
+                    stream.callback { rbcserver.remove_web_logger(stream) }
+                end
+            else
+                error 404
+            end
         end
 
         get "/login" do
