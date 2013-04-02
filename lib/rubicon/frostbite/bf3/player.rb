@@ -164,7 +164,12 @@ module Rubicon::Frostbite::BF3
         end
 
         def ping
-            @server.send_request("player.ping", @name)
+            ping_packet = @server.send_request("player.ping", @name)
+            if ping_packet.words[0] == "OK"
+                ping_packet.words[1].to_i
+            else
+                -1
+            end
         end
 
         # Converts this player to a Hash. Useful for things like JSON serialization
@@ -176,7 +181,8 @@ module Rubicon::Frostbite::BF3
                 kills:  @kills,
                 deaths: @deaths,
                 rank:   @rank,
-                score:  @score
+                score:  @score,
+                ping:   ping
             })
         end
     end

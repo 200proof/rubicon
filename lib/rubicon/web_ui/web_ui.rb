@@ -67,6 +67,21 @@ module Rubicon::WebUI
                 messages = flash(key).collect {|message| "  <div class='alert alert-#{message[0]}'>#{message[1]}</div>\n"}
                 "<div id='#{id}'>\n" + messages.join + "</div>"
             end
+
+            def threaded_render (&block)
+                result = nil
+                Thread.new { result = block.call }
+
+                deferred_poller = proc do
+                    if result
+                        body result
+                    else
+                        EventMachine.next_tick deferred_poller
+                    end
+                end
+
+                EventMachine.next_tick deferred_poller
+            end
         end
 
         before "*" do
@@ -117,7 +132,7 @@ module Rubicon::WebUI
 
         aget "/:server_name" do
             if server = Rubicon.servers[params[:server_name]]
-                body erb :server, locals: {server: server}
+                threaded_render { erb :server, locals: {server: server} }
             else
                 error 404
             end
@@ -134,9 +149,9 @@ module Rubicon::WebUI
             end
         end
 
-        get "/:server_name/api/players" do
+        aget "/:server_name/api/players" do
             if server = Rubicon.servers[params[:server_name]]
-                JSON.generate server.players.to_hash
+                threaded_render { JSON.generate server.players.to_hash }
             else
                 error 404
             end 

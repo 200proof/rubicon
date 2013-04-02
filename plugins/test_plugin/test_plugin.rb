@@ -14,4 +14,11 @@ class MyTestPlugin < Rubicon::Plugin
             logger.warn "#{player.name} is NOT in group \"test\""
         end
     end
+
+    command "ping" do
+        player = server.players[args[0]]
+        if player
+            p player.ping
+        end
+    end
 end

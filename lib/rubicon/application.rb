@@ -78,7 +78,7 @@ module Rubicon
         @@refresh_timer = Thread.new do
             until @@shutting_down
                 logger.debug { "Dispatching :refresh_scoreboard" }
-                servers.each_value { |server| server.message_channel.send :refresh_scoreboard; }
+                servers.each_value { |server| server.message_channel.send :refresh_scoreboard }
                 logger.debug { "All :refresh_scoreboards dispatched" }
                 sleep 15
             end
@@ -93,7 +93,7 @@ module Rubicon
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
 
-            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false, threaded: true
+            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false
             @@thin_instance.start
 
             config["servers"].each do |server|
