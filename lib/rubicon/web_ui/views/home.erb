@@ -1,1 +1,18 @@
-Plz fill me kthxbai
+<h1>Welcome to Rubicon</h1>
+<p>Please select a server to adminster</p>
+<table class="table table-striped table-hover table-border">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Players</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% Rubicon.servers.each do |short_name, server| %>
+            <tr>
+                <td><a href="/<%= short_name %>"><%= server.name %></a></td>
+                <td><%= server.players.count %> / <%= server.max_players %></td>
+            </tr>
+        <% end %>
+    </tbody>
+</table>

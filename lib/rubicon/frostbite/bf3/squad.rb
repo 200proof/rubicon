@@ -27,11 +27,11 @@ module Rubicon::Frostbite::BF3
         end
 
         def say(msg)
-            @server.connection.send_command("admin.say", msg, "squad", @id)
+            @server.send_command("admin.say", msg, "squad", @id)
         end
 
         def yell(msg, duration)
-            @server.connection.send_command("admin.say", msg, duration, "squad", @team.id, @id)
+            @server.send_command("admin.say", msg, duration, "squad", @team.id, @id)
         end
     end
 end

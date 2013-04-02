@@ -3,6 +3,7 @@ require "compass"
 require "coffee-script"
 require "sinatra/flash"
 require "sinatra/sse"
+require "json"
 
 module Rubicon::WebUI
     class WebUIApp < Sinatra::Base
@@ -66,10 +67,12 @@ module Rubicon::WebUI
             end
         end
 
-        before "/*" do
-            exempt = /^(login|stylesheets\/.+|javascripts\/.+|__sinatra__)/
-            unless exempt.match params[:splat].first
-                redirect "/login" unless current_user
+        before "*" do
+            path = params[:splat].first
+            exempt = /^\/(login|stylesheets\/.+|javascripts\/.+|__sinatra__)/
+            unless exempt.match(path) || current_user
+                session[:redirect_to] = path unless path == "/login"
+                redirect "/login" 
             end
         end
 
@@ -81,20 +84,8 @@ module Rubicon::WebUI
         get "/javascripts/:name.js" do
             filename = params[:splat].first
 
-            content_type 'text/css', :charset => 'utf-8'
+            content_type 'text/javascript', :charset => 'utf-8'
             coffee :"javascripts/#{params[:name]}"
-        end
-
-        get "/logstream/:server" do
-            p params[:server]
-            if rbcserver = Rubicon.servers[params[:server]]
-                sse_stream do |stream|
-                    rbcserver.add_web_logger(stream)
-                    stream.callback { rbcserver.remove_web_logger(stream) }
-                end
-            else
-                error 404
-            end
         end
 
         get "/login" do
@@ -103,7 +94,10 @@ module Rubicon::WebUI
 
         post "/login" do
             if authenticate_user!(params[:login]["username"], params[:login]["password"])
-                redirect "/"
+                redirect_dest = session[:redirect_to] || "/"
+                session[:redirect_to] = nil
+
+                redirect redirect_dest
             else
                 flash[:error] = "Invalid username or password!"
                 erb :login
@@ -117,6 +111,44 @@ module Rubicon::WebUI
 
         get "/" do 
             erb :home
+        end
+
+        get "/:server_name" do
+            if server = Rubicon.servers[params[:server_name]]
+                erb :server, locals: {server: server}
+            else
+                error 404
+            end
+        end
+
+        get "/:server_name/api/logstream" do
+            if server = Rubicon.servers[params[:server_name]]
+                sse_stream do |stream|
+                    server.add_web_logger(stream)
+                    stream.callback { server.remove_web_logger(stream) }
+                end
+            else
+                error 404
+            end
+        end
+
+        get "/:server_name/api/players" do
+            if server = Rubicon.servers[params[:server_name]]
+                JSON.generate server.players.to_hash
+            else
+                error 404
+            end 
+        end
+
+        get "/:server/api" do
+            if server = Rubicon.servers[params[:server_name]]
+                sse_stream do |stream|
+                    server.add_web_logger(stream)
+                    stream.callback { server.remove_web_logger(stream) }
+                end
+            else
+                error 404
+            end
         end
     end
 end

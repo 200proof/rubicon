@@ -15,6 +15,18 @@ module Rubicon::Frostbite::BF3
         def []=(key, value)
             key == "Server" ? value : super(key, value)
         end
+
+        # Converts this player collection and all its players into a hash.
+        # Useful for converting to JSON
+        def to_hash
+            ret = {}
+
+            each do |name, player|
+                ret[name] = player.to_hash
+            end
+
+            ret
+        end
     end
 
     class Player
@@ -89,27 +101,27 @@ module Rubicon::Frostbite::BF3
 
         # Says `msg` to every player's chatbox.
         def say(msg)
-            @server.connection.send_command("admin.say", msg, "player", @name)
+            @server.send_command("admin.say", msg, "player", @name)
         end
 
         # Yells `msg` to the entire server for `duration` seconds.
         def yell(msg, duration)
-            @server.connection.send_command("admin.yell", msg, duration, "player", @name)
+            @server.send_command("admin.yell", msg, duration, "player", @name)
         end
 
         # Kick a player. If a reason is not passed, it will default to the BF3 server's
         # default value of "Kicked by administrator."
         def kick(reason=nil) 
             if reason
-                @server.connection.send_command("admin.kickPlayer", @name, reason)
+                @server.send_command("admin.kickPlayer", @name, reason)
             else
-                @server.connection.send_command("admin.kickPlayer", @name)
+                @server.send_command("admin.kickPlayer", @name)
             end
         end
 
         # Kill the player.
         def kill
-            @server.connection.send_command("admin.killPlayer", @name)
+            @server.send_command("admin.killPlayer", @name)
         end
 
         # Stubbed out to return true until a permissions system is implemented
@@ -149,6 +161,23 @@ module Rubicon::Frostbite::BF3
 
         def belongs_to_group?(group_name)
             @server.permissions_manager.player_belongs_to_group?(@name, group_name)
+        end
+
+        def ping
+            @server.send_request!("player.ping", @name)
+        end
+
+        # Converts this player to a Hash. Useful for things like JSON serialization
+        def to_hash
+            return p ({
+                name:   @name,
+                team:   @team_id,
+                squad:  @squad_id,
+                kills:  @kills,
+                deaths: @deaths,
+                rank:   @rank,
+                score:  @score
+            })
         end
     end
 

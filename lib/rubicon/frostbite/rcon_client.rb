@@ -7,7 +7,7 @@ module Rubicon::Frostbite
         attr_accessor :message_channel
 
         def initialize(config_object)
-            super
+            super()
 
             @logger = Rubicon::Util::Logger.new(config_object[:log_settings])
 
@@ -49,6 +49,10 @@ module Rubicon::Frostbite
 
         def unbind
             if @handler_thread
+                @active_promises.each do |promise|
+                    promise << nil
+                end
+                @game_handler.shutdown!
                 @handler_thread.join (10) if @handler_thread.alive?
             else
                 # If this gets called before a handler thread is created, it
@@ -74,16 +78,22 @@ module Rubicon::Frostbite
             dispatch_packet(packet)
         end
 
-        # Used to send a request to the server, whose reply is required
-        # to continue the flow of execution
+        # Sends a request to the server, and blocks until it gets a response
         def send_request(*words)
+            ~send_request!(*words)
+        end
+
+        # Used to send a request to the server, returning a promise
+        # which can be accessed via the ~ operator (i.e. ~my_request)
+        def send_request!(*words)
             sequence, packet = build_packet(words)
 
             ret_promise = promise
             @active_promises[sequence] = ret_promise
             dispatch_packet(packet)
 
-            ~ret_promise
+            ret_promise
+        rescue Exception => e; p e
         end
 
         def logger(progname="RconClient")
@@ -147,8 +157,9 @@ module Rubicon::Frostbite
                 # All requests need to be acknowledged with a response
                 dispatch_packet RconPacket.new(sequence, origin, :response, "OK") if type == :request
 
-                if (@active_promises[sequence])
+                if (@active_promises[sequence] && origin == :client)
                     @active_promises[sequence] << received_packet
+                    @active_promises.delete sequence
                 end
 
                 if (type == :request) && (origin == :server)

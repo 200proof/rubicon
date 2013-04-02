@@ -5,7 +5,7 @@ module Rubicon::Frostbite::BF3
         require 'rubicon/frostbite/bf3/signal_handlers'
         require 'rubicon/frostbite/bf3/event_handlers'
 
-        attr_reader :connection, :settings, :permissions_manager
+        attr_reader :settings, :permissions_manager
         attr_accessor :name, :players, :max_players, :game_mode,
             :current_map, :rounds_played, :rounds_total, :scores,
             :score_target, :online_state, :ranked, :punkbuster,
@@ -25,6 +25,8 @@ module Rubicon::Frostbite::BF3
             @logger = logger
 
             @teams = []
+
+            @connection_mutex = Mutex.new
 
             # 0 = neutral, 16 possible teams
             17.times do |idx|
@@ -95,6 +97,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def shutdown!
+            Rubicon.servers.delete @config[:name]
             @connection.close_connection
         end
 
@@ -135,6 +138,18 @@ module Rubicon::Frostbite::BF3
 
         def message_channel
             @connection.message_channel
+        end
+
+        def send_command(*args)
+            @connection_mutex.synchronize {
+                @connection.send_command(*args)
+            }
+        end
+
+        def send_request(*args)
+            @connection_mutex.synchronize {
+                @connection.send_request(*args)
+            }
         end
     end
 

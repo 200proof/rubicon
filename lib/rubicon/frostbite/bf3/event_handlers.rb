@@ -98,7 +98,7 @@ module Rubicon::Frostbite::BF3
 
             p = server.players[player_name]
             p.disconnected
-            server.players.delete player_name
+            p server.players.delete player_name
 
             event_args   = {
                 player_name:  player_name,
@@ -112,7 +112,7 @@ module Rubicon::Frostbite::BF3
 
         event "player.onSquadChange" do |server, packet|
             event_name  = packet.read_word
-            player_name = server.players[packet.read_word]
+            player_name = packet.read_word
             team        = packet.read_word.to_i
             squad       = packet.read_word.to_i
 

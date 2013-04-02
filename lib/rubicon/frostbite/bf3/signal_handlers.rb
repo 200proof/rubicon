@@ -6,11 +6,11 @@ module Rubicon::Frostbite::BF3
         end
 
         signal :shutdown do |server|
-            server.connection.message_channel.close
+            server.message_channel.close
         end
 
         signal :refresh_server_info do |server|
-            info = server.connection.send_request("serverinfo")
+            info = server.send_request("serverinfo")
 
             info.read_word
 
@@ -38,7 +38,7 @@ module Rubicon::Frostbite::BF3
         end
 
         signal :refresh_scoreboard do |server|
-            scoreboard_packet = server.connection.send_request("admin.listPlayers", "all")
+            scoreboard_packet = server.send_request("admin.listPlayers", "all")
 
             status, scoreboard = scoreboard_packet.read_word, scoreboard_packet.read_player_info_block
 

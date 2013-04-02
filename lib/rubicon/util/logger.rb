@@ -54,6 +54,7 @@ module Rubicon::Util
             @logger.add(level, message, progname, &block)
 
             if level > ::Logger::DEBUG
+                message ||= block.call
                 @listener_streams.each do |stream|
                         stream.push event: "log", data: JSON::dump({level: level, time: Time.now.to_s, progname: progname, msg: message})
                 end

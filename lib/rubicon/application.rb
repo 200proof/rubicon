@@ -78,7 +78,7 @@ module Rubicon
         @@refresh_timer = Thread.new do
             until @@shutting_down
                 logger.debug { "Dispatching :refresh_scoreboard" }
-                servers.each_value { |server| server.message_channel.send :refresh_scoreboard }
+                servers.each_value { |server| server.message_channel.send :refresh_scoreboard; }
                 logger.debug { "All :refresh_scoreboards dispatched" }
                 sleep 15
             end
