@@ -164,7 +164,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def ping
-            @server.send_request!("player.ping", @name)
+            @server.send_request("player.ping", @name)
         end
 
         # Converts this player to a Hash. Useful for things like JSON serialization

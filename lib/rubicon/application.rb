@@ -93,7 +93,7 @@ module Rubicon
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
 
-            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false
+            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false, threaded: true
             @@thin_instance.start
 
             config["servers"].each do |server|

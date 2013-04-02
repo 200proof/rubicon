@@ -147,8 +147,12 @@ module Rubicon::Frostbite::BF3
         end
 
         def send_request(*args)
+            ~send_request!(*args)
+        end
+
+        def send_request!(*args)
             @connection_mutex.synchronize {
-                @connection.send_request(*args)
+                @connection.send_request!(*args)
             }
         end
     end

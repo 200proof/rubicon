@@ -8,6 +8,7 @@ gem "thread", "~> 0.0.4.2"
 # Web stuff
 gem "thin", "~> 1.5.1"
 gem "sinatra", "~> 1.4.2"
+gem "async_sinatra", "~> 1.1.0"
 gem "sass", "~> 3.2.7"
 gem "compass", "~> 0.12.2"
 gem "coffee-script", "~> 2.2.0"

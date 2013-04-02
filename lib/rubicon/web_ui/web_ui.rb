@@ -3,6 +3,7 @@ require "compass"
 require "coffee-script"
 require "sinatra/flash"
 require "sinatra/sse"
+require "sinatra/async"
 require "json"
 
 module Rubicon::WebUI
@@ -27,6 +28,7 @@ module Rubicon::WebUI
                 secret: Rubicon.web_ui_config["session_secret"]
 
             register Sinatra::Flash
+            register Sinatra::Async
         end
 
         helpers do
@@ -113,9 +115,9 @@ module Rubicon::WebUI
             erb :home
         end
 
-        get "/:server_name" do
+        aget "/:server_name" do
             if server = Rubicon.servers[params[:server_name]]
-                erb :server, locals: {server: server}
+                body erb :server, locals: {server: server}
             else
                 error 404
             end
