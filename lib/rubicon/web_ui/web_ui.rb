@@ -38,6 +38,7 @@ module Rubicon::WebUI
 
             def authenticate_user!(username, password)
                 if configuration["users"].include? ({"name"=>username, "password"=>password})
+                    flash[:success] = "Logged in successfully!"
                     session[:username] = username
                     @@active_sessions[session[:username]] = session[:session_id]
                 else
@@ -64,30 +65,21 @@ module Rubicon::WebUI
             def flash_messages(key=:flash)
                 return "" if flash(key).empty?
                 id = (key == :flash ? "flash" : "flash_#{key}")
-                messages = flash(key).collect {|message| "  <div class='alert alert-#{message[0]}'>#{message[1]}</div>\n"}
+                messages = flash(key).collect { |message|
+                    "<div class='alert alert-#{message[0]}'>#{message[1]}<button type='button' class='close' data-dismiss='alert'><i class='icon-remove-sign'></i></button></div>\n"
+                }
                 "<div id='#{id}'>\n" + messages.join + "</div>"
             end
 
             def threaded_render (&block)
-                result = nil
-                Thread.new { result = block.call }
-
-                deferred_poller = proc do
-                    if result
-                        body result
-                    else
-                        EventMachine.next_tick deferred_poller
-                    end
-                end
-
-                EventMachine.next_tick deferred_poller
+                EventMachine.defer block, proc { |result| body result }
             end
         end
 
         before "*" do
             path = params[:splat].first
             exempt = /^\/(login|stylesheets\/.+|javascripts\/.+|__sinatra__)/
-            unless exempt.match(path) || current_user
+            unless current_user || exempt.match(path)
                 session[:redirect_to] = path unless path == "/login"
                 redirect "/login" 
             end
@@ -106,7 +98,12 @@ module Rubicon::WebUI
         end
 
         get "/login" do
-            erb :login
+            if current_user
+                redirect '/'
+            else
+                headers "Status" => "401"
+                erb :login
+            end
         end
 
         post "/login" do
@@ -117,6 +114,7 @@ module Rubicon::WebUI
                 redirect redirect_dest
             else
                 flash[:error] = "Invalid username or password!"
+                headers "Status" => "401"
                 erb :login
             end
         end
@@ -130,19 +128,19 @@ module Rubicon::WebUI
             erb :home
         end
 
-        aget "/:server_name" do
+        get "/:server_name" do
             if server = Rubicon.servers[params[:server_name]]
-                threaded_render { erb :server, locals: {server: server} }
+                erb :server, locals: {server: server} 
             else
                 error 404
             end
         end
 
-        get "/:server_name/api/logstream" do
+        get "/:server_name/api/stream" do
             if server = Rubicon.servers[params[:server_name]]
                 sse_stream do |stream|
-                    server.add_web_logger(stream)
-                    stream.callback { server.remove_web_logger(stream) }
+                    server.add_web_stream(stream)
+                    stream.callback { server.remove_web_stream(stream) }
                 end
             else
                 error 404

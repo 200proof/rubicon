@@ -1,0 +1,16 @@
+<table class="table table-border text-center" id="log-table">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Source</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: { data: logStream.logItems, afterRender: logStream.stickyAutoscroller }">
+        <tr data-bind="css: colorCode">
+            <td data-bind="text: time"></td>
+            <td data-bind="text: progname"></td>
+            <td data-bind="text: msg"></td>
+        </tr>
+    </tbody>
+</table>

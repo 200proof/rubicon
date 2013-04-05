@@ -2,17 +2,17 @@ require "digest/md5"
 
 module Rubicon::Frostbite::BF3
     class Server
+        GAME_NAME = "bf3"
+
         require 'rubicon/frostbite/bf3/signal_handlers'
         require 'rubicon/frostbite/bf3/event_handlers'
 
-        attr_reader :settings, :permissions_manager
-        attr_accessor :name, :players, :max_players, :game_mode,
-            :current_map, :rounds_played, :rounds_total, :scores,
-            :score_target, :online_state, :ranked, :punkbuster,
-            :has_password, :uptime, :round_time, :ip,
-            :punkbuster_version, :join_queue, :region,
-            :closest_ping_site, :country, :matchmaking,
-            :teams, :plugin_manager
+        attr_reader :settings, :permissions_manager, :disconnected_players, :players, :web_streams
+        attr_accessor :name, :max_players,
+            :game_mode, :current_map, :rounds_played, :rounds_total, :scores,
+            :score_target, :online_state, :ranked, :punkbuster, :has_password, 
+            :uptime, :round_time, :ip, :punkbuster_version, :join_queue, :region,
+            :closest_ping_site, :country, :matchmaking, :teams, :plugin_manager
 
         # TODO: refactor @config and @settings to be less
         # confusing
@@ -37,6 +37,8 @@ module Rubicon::Frostbite::BF3
         # Called when successfully connected to a BF3 RCON server
         def connected
             @players = PlayerCollection.new(self)
+            @disconnected_players = {}
+            @web_streams = []
 
             logger.debug { "Connected to a BF3 server!" }
 
@@ -96,6 +98,7 @@ module Rubicon::Frostbite::BF3
             logger.debug { "Event pump stopped. Shutting down like a boss."}
         end
 
+        # Disables all plugins, saves config and closes the connection.
         def shutdown!
             Rubicon.servers.delete @config[:name]
             @connection.close_connection
@@ -124,16 +127,33 @@ module Rubicon::Frostbite::BF3
             end
         end  
 
+        def say(msg)
+            send_command("admin.say", msg, "all")
+        end
+
+        def yell(message, duration=15)
+            send_command("admin.yell", msg, duration, "all")
+        end
+
         def logger(progname="BF3Server")
             @logger.with_progname(progname)
         end
 
-        def add_web_logger(stream)
+        def add_web_stream(stream)
+            @web_streams << stream
             @logger.add_web_listener(stream)
+
+            # get a scoreboard sent to the stream right away
+            process_signal(:refresh_scoreboard)
         end   
         
-        def remove_web_logger(stream)
+        def remove_web_stream(stream)
+            @web_streams.delete stream
             @logger.remove_web_listener(stream)
+        end
+
+        def push_to_web_streams(event_name, data)
+            @web_streams.each { |stream| stream.push event: event_name, data: JSON::dump(data) }
         end
 
         def message_channel
@@ -141,9 +161,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def send_command(*args)
-            @connection_mutex.synchronize {
-                @connection.send_command(*args)
-            }
+            @connection.send_command(*args)
         end
 
         def send_request(*args)
@@ -151,9 +169,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def send_request!(*args)
-            @connection_mutex.synchronize {
-                @connection.send_request!(*args)
-            }
+            @connection.send_request!(*args)
         end
     end
 

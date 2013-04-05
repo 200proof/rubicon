@@ -1,12 +1,13 @@
 module Rubicon::Frostbite::BF3
     class Team
         attr_reader :id
-        attr_accessor :players, :squads
+        attr_accessor :tickets, :players, :squads
 
         def initialize(server, id)
             @id = id
-            @players = {}
+            @players = PlayerCollection.new(server)
             @squads = []
+            @tickets = 0
 
             # 0 = no squad, 32 squads per team
             33.times do |idx|
@@ -42,6 +43,10 @@ module Rubicon::Frostbite::BF3
 
         def yell(msg, duration)
             @server.send_command("admin.yell", msg, duration, "team", @id)
+        end
+
+        def to_hash
+            { id: @id, players: @players.values.sort { |a, b| b.score <=> a.score }.map { |player| player.to_hash } }
         end
     end
 end

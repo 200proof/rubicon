@@ -35,6 +35,7 @@ module Rubicon
         require "rubicon/frostbite/bf3/team.rb"
         require "rubicon/frostbite/bf3/squad.rb"
         require "rubicon/frostbite/bf3/weapon.rb"
+        require "rubicon/frostbite/bf3/maps_and_game_modes.rb"
 
         require "rubicon/web_ui/thin_logging_patch"
         require "rubicon/web_ui/web_ui"

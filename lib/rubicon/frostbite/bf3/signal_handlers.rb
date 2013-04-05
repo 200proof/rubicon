@@ -39,6 +39,9 @@ module Rubicon::Frostbite::BF3
 
         signal :refresh_scoreboard do |server|
             scoreboard_packet = server.send_request("admin.listPlayers", "all")
+            team_scores = server.send_request("serverinfo")
+            team_scores.skip 8
+            team_scores, server.score_target = team_scores.read_team_scores
 
             status, scoreboard = scoreboard_packet.read_word, scoreboard_packet.read_player_info_block
 
@@ -54,6 +57,12 @@ module Rubicon::Frostbite::BF3
             end
 
             server.logger.info { "Refreshed scoreboard! (#{scoreboard.length} players)" }
+            server.push_to_web_streams("scoreboard", server.teams.reduce([]) { |store, team|
+                store << team.to_hash unless team.players.empty?
+
+                store
+            })
+            server.push_to_web_streams "team_scores", { target: server.score_target, scores: [0, *team_scores] } # 0 to prevent "neutral team" from having a score target
         end
 
         signal :console_command do |server, cmd_string|

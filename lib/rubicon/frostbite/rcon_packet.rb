@@ -57,6 +57,12 @@ module Rubicon::Frostbite
             @read_index = -1
         end
 
+        # Fast forward the read index by `amount`
+        # words.
+        def skip(amount = 1)
+            @read_index += amount
+        end
+
         # Reads the next word in this packet
         def read_word
             @words[@read_index += 1]

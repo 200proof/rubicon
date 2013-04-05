@@ -66,14 +66,18 @@ module Rubicon::Frostbite::BF3
         end
 
         event "player.onJoin" do |server, packet|
-            event_name = packet.read_word
-            player     = packet.read_word
-            guid       = packet.read_word
+            event_name  = packet.read_word
+            player_name = packet.read_word
+            guid        = packet.read_word
 
-            p = (server.players[player] ||= Player.new(server, player, guid))
-            p.guid = guid
+            if server.disconnected_players[player_name]
+                server.disconnected_players.delete player_name
+            end
 
-            server.logger.event(:join) { "[JOIN] <#{player}> has joined the server!" }
+            player = (server.players[player_name] ||= Player.new(server, player_name, guid))
+            player.guid = guid
+
+            server.logger.event(:join) { "[JOIN] <#{player_name}> has joined the server!" }
 
             server.plugin_manager.dispatch_event(event_name, { player: p })
         end
@@ -96,9 +100,11 @@ module Rubicon::Frostbite::BF3
             player_name  = packet.read_word
             player_stats = packet.read_player_info_block.first
 
-            p = server.players[player_name]
-            p.disconnected
-            p server.players.delete player_name
+            player = server.players[player_name]
+            player.disconnected
+            server.players.delete player_name
+
+            server.disconnected_players[player_name] = player
 
             event_args   = {
                 player_name:  player_name,
@@ -116,19 +122,22 @@ module Rubicon::Frostbite::BF3
             team        = packet.read_word.to_i
             squad       = packet.read_word.to_i
 
-            player      = server.players[player_name] ||= Player.new(server, player_name)
+            unless server.disconnected_players[player_name]
+                player      = server.players[player_name] ||= Player.new(server, player_name)
+                old_squad = player.squad
+                player.squad = squad
+                new_squad = player.squad
 
-            old_squad = player.squad
-            player.squad = squad
-            new_squad = player.squad
+                event_args = {
+                    player: player,
+                    old_squad: old_squad,
+                    new_squad: new_squad
+                }
 
-            event_args = {
-                player: player,
-                old_squad: old_squad,
-                new_squad: new_squad
-            }
+                server.logger.event(:squad_change) { "[SQAD] <#{player_name}> has switched from #{old_squad.name} to #{new_squad.name}" }
 
-            server.plugin_manager.dispatch_event(event_name, event_args)
+                server.plugin_manager.dispatch_event(event_name, event_args)
+            end
         end
 
         event "player.onTeamChange" do |server, packet|
@@ -137,19 +146,23 @@ module Rubicon::Frostbite::BF3
             team        = packet.read_word.to_i
             squad       = packet.read_word.to_i
 
-            player      = server.players[player_name] ||= Player.new(server, player_name)
+            unless server.disconnected_players[player_name]
+                player      = server.players[player_name] ||= Player.new(server, player_name)
 
-            old_team    = player.team
-            player.team = team
-            new_team    = player.team
+                old_team    = player.team
+                player.team = team
+                new_team    = player.team
 
-            event_args = {
-                player: player,
-                old_team: old_team,
-                new_team: new_team
-            }
+                event_args = {
+                    player: player,
+                    old_team: old_team,
+                    new_team: new_team
+                }
 
-            server.plugin_manager.dispatch_event(event_name, event_args)
+                server.logger.event(:squad_change) { "[TEAM] <#{player_name}> has switched from team #{old_team.id} to team #{new_team.id}" }
+
+                server.plugin_manager.dispatch_event(event_name, event_args)
+            end
         end
 
         event "punkBuster.onMessage" do |server, packet|

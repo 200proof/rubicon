@@ -174,22 +174,35 @@ module Rubicon::Frostbite::BF3
 
         # Converts this player to a Hash. Useful for things like JSON serialization
         def to_hash
-            return p ({
+            {
                 name:   @name,
                 team:   @team_id,
                 squad:  @squad_id,
                 kills:  @kills,
                 deaths: @deaths,
                 rank:   @rank,
-                score:  @score,
-                ping:   ping
-            })
+                score:  @score
+            }
         end
     end
 
     # A special player is used for any commands or events sent by the console or the
     # game server itself. It has every permission and returns `false` for `is_human?`
     class SpecialPlayer < Player
+        def initialize(server, name, guid=NO_GUID)
+            @server = server
+            @name = name
+            @guid = guid
+
+            @team_id = 0
+            @squad_id = 0
+
+            @kills = 0
+            @deaths = 0
+            @rank = 0
+            @score = 0
+        end
+
         def has_permission?(perm)
             true
         end

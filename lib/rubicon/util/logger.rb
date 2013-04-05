@@ -42,7 +42,7 @@ module Rubicon::Util
         def event(event_name, message=nil, progname, &block)
             msg = message || block.call
             @listener_streams.each do |stream|
-                    stream.push event: "event", data: JSON::dump({event: event_name, time: Time.now.to_s, progname: progname, msg: msg})
+                    stream.push event: "event", data: JSON::dump({event: event_name, time: Time.now.strftime("%Y-%m-%d %H:%M:%S"), progname: progname, msg: msg})
             end
 
             if @settings[:events]
@@ -56,7 +56,7 @@ module Rubicon::Util
             if level > ::Logger::DEBUG
                 message ||= block.call
                 @listener_streams.each do |stream|
-                        stream.push event: "log", data: JSON::dump({level: level, time: Time.now.to_s, progname: progname, msg: message})
+                        stream.push event: "log", data: JSON::dump({level: level, time: Time.now.strftime("%Y-%m-%d %H:%M:%S"), progname: progname, msg: message})
                 end
             end
         end
