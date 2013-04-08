@@ -39,30 +39,30 @@ module Rubicon::Frostbite::BF3
 
         signal :refresh_scoreboard do |server|
             scoreboard_packet = server.send_request("admin.listPlayers", "all")
-            team_scores = server.send_request("serverinfo")
+            team_scores       = server.send_request("serverinfo")
+
             team_scores.skip 8
             team_scores, server.score_target = team_scores.read_team_scores
 
             status, scoreboard = scoreboard_packet.read_word, scoreboard_packet.read_player_info_block
 
-            scoreboard.each do |player|
-                name = player["name"]
-                server.players[name] ||= Player.new(server, player["name"], player["guid"])
-                server.players[name].team   = player["teamId"].to_i
-                server.players[name].squad  = player["squadId"].to_i
-                server.players[name].kills  = player["kills"].to_i
-                server.players[name].deaths = player["deaths"].to_i
-                server.players[name].score  = player["score"].to_i
-                server.players[name].rank   = player["rank"].to_i
+            scoreboard.each do |player_info_block|
+                name = player_info_block["name"]
+                
+                if player = server.players[name]
+                    player.update_from_info_block(player_info_block)
+                else
+                    server.players[name] = Player.from_info_block(server, player_info_block)
+                end
             end
 
             server.logger.info { "Refreshed scoreboard! (#{scoreboard.length} players)" }
             server.push_to_web_streams("scoreboard", server.teams.reduce([]) { |store, team|
                 store << team.to_hash unless team.players.empty?
-
                 store
             })
-            server.push_to_web_streams "team_scores", { target: server.score_target, scores: [0, *team_scores] } # 0 to prevent "neutral team" from having a score target
+                                # 0 to prevent "neutral team" from having a score target =====v
+            server.push_to_web_streams "team_scores", { target: server.score_target, scores: [0, *team_scores] } 
         end
 
         signal :console_command do |server, cmd_string|

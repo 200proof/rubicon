@@ -63,6 +63,11 @@ module Rubicon::Frostbite
             @read_index += amount
         end
 
+        # How many words can still be read from the current position
+        def words_left
+            @words.length - @read_index - 1
+        end
+
         # Reads the next word in this packet
         def read_word
             @words[@read_index += 1]
@@ -87,6 +92,11 @@ module Rubicon::Frostbite
             end
 
             ret
+        end
+
+        # Reads to the end of the packet
+        def remaining_words
+            words_left.times.map { read_word }
         end
 
         # Reads a "Team Scores" block

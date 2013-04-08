@@ -32,6 +32,20 @@ module Rubicon::Frostbite::BF3
     class Player
         NO_GUID = "NO_GUID"
 
+        # Creates a player from a player info block.
+        def self.from_info_block(server, info_block_hash)
+            player = Player.new(server, info_block_hash["name"], info_block_hash["guid"])
+
+            player.team   = info_block_hash["teamId"].to_i
+            player.squad  = info_block_hash["squadId"].to_i
+            player.kills  = info_block_hash["kills"].to_i
+            player.deaths = info_block_hash["deaths"].to_i
+            player.score  = info_block_hash["score"].to_i
+            player.rank   = info_block_hash["rank"].to_i
+
+            player
+        end
+
         attr_accessor :name, :guid, :score, :kills,
             :deaths, :rank
 
@@ -50,6 +64,15 @@ module Rubicon::Frostbite::BF3
 
             team.add self
             squad.add self
+        end
+
+        def update_from_info_block(info_block_hash)
+            @team   = info_block_hash["teamId"].to_i
+            @squad  = info_block_hash["squadId"].to_i
+            @kills  = info_block_hash["kills"].to_i
+            @deaths = info_block_hash["deaths"].to_i
+            @score  = info_block_hash["score"].to_i
+            @rank   = info_block_hash["rank"].to_i
         end
 
         def team
@@ -112,11 +135,7 @@ module Rubicon::Frostbite::BF3
         # Kick a player. If a reason is not passed, it will default to the BF3 server's
         # default value of "Kicked by administrator."
         def kick(reason=nil) 
-            if reason
-                @server.send_command("admin.kickPlayer", @name, reason)
-            else
-                @server.send_command("admin.kickPlayer", @name)
-            end
+            server.kick_player @name, reason
         end
 
         # Kill the player.
@@ -124,16 +143,33 @@ module Rubicon::Frostbite::BF3
             @server.send_command("admin.killPlayer", @name)
         end
 
-        # Stubbed out to return true until a permissions system is implemented
-        def has_permission? (perm)
-            true
+        # Called when the player leaves the server. It removes the player from the squad
+        # and team they are currently in.
+        def disconnected
+            squad.remove @name
+            team.remove @name
         end
 
-        # Checks if the player is actually in the server. This is assumed to be the
-        # case if the server has sent a onJoin event for the player, thus setting
-        # their GUID to something other than the default of NO_GUID
-        def has_joined?
-            @guid != NO_GUID
+        # Whether or not this player has permission `perm_name` on this server or globally.
+        def has_permission?(perm_name)
+            @server.permissions_manager.player_has_permission?(@name, perm_name)
+        end
+
+        # Whether or not the player belongs to `group_name` on this server or globally.
+        def belongs_to_group?(group_name)
+            @server.permissions_manager.player_belongs_to_group?(@name, group_name)
+        end
+
+        # This is relatively slow, especially for large amounts of players, but if
+        # you're a masochist and want your plugin to be slow, feel free to use this.
+        # It does not cache previous pings.
+        def ping
+            ping_packet = @server.send_request("player.ping", @name)
+            if ping_packet.words[0] == "OK"
+                ping_packet.words[1].to_i
+            else
+                -1
+            end
         end
 
         # Should return true for actual humans who triggered the event.
@@ -147,35 +183,14 @@ module Rubicon::Frostbite::BF3
 
         # Pretty print like a boss
         def inspect
-            "#<BF3Player: #{@name} #{@kills}/#{@deaths} #{@score}>"
-        end
-
-        def disconnected
-            squad.remove @name
-            team.remove @name
-        end
-
-        def has_permission?(perm_name)
-            @server.permissions_manager.player_has_permission?(@name, perm_name)
-        end
-
-        def belongs_to_group?(group_name)
-            @server.permissions_manager.player_belongs_to_group?(@name, group_name)
-        end
-
-        def ping
-            ping_packet = @server.send_request("player.ping", @name)
-            if ping_packet.words[0] == "OK"
-                ping_packet.words[1].to_i
-            else
-                -1
-            end
+            "#<BF3Player: #{@name} (#{@guid}) #{@kills}K:#{@deaths}D #{@score}>"
         end
 
         # Converts this player to a Hash. Useful for things like JSON serialization
         def to_hash
             {
                 name:   @name,
+                guid:   @guid, 
                 team:   @team_id,
                 squad:  @squad_id,
                 kills:  @kills,

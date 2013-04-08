@@ -46,7 +46,7 @@ module Rubicon::Frostbite::BF3
         end
 
         def to_hash
-            { id: @id, players: @players.values.sort { |a, b| b.score <=> a.score }.map { |player| player.to_hash } }
+            { id: @id, players: @players.values.map { |player| player.to_hash } }
         end
     end
 end

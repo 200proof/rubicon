@@ -29,6 +29,13 @@ module Rubicon
         @@config["webui"]
     end
 
+    def self.start_web_ui
+        @@thin_instance = Thin::Server.new @@config["webui"]["listen"]["ip"], @@config["webui"]["listen"]["port"], 
+            Rubicon::WebUI::WebUIApp, signals: false
+        @@thin_instance.threaded = true
+        @@thin_instance.start
+    end
+
     def self.shutdown!
         return if @@shutting_down # last server to disconnect may end up calling this, no need to run it again
 
@@ -87,14 +94,15 @@ module Rubicon
         Signal.trap "INT", shutdown_proc
         Signal.trap "TERM", shutdown_proc
 
+        # Get a beefier threadpool for more concurrent Thin requests.
+        EventMachine.threadpool_size = 50
         EventMachine.run do
             EventMachine.error_handler do |e|
                 logger("EM").error "Exception during event: #{e.message} (#{e.class})"
                 logger("EM").error (e.backtrace || [])[0..10].join("\n")
             end
 
-            @@thin_instance = Thin::Server.new config["webui"]["listen"]["ip"], config["webui"]["listen"]["port"], Rubicon::WebUI::WebUIApp, signals: false, threaded: true
-            @@thin_instance.start
+            start_web_ui
 
             config["servers"].each do |server|
                 server_config_object = {

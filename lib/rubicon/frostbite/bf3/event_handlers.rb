@@ -56,30 +56,36 @@ module Rubicon::Frostbite::BF3
             end
         end
 
-        event "player.onAuthenticated" do |server, packet|
-            event_name  = packet.read_word
-            player_name = packet.read_word
-
-            server.players[player_name] ||= Player.new(server, player_name)
-
-            server.logger.event(:auth) { "[AUTH] <#{player_name}> has been authenticated!" }
-        end
-
         event "player.onJoin" do |server, packet|
             event_name  = packet.read_word
             player_name = packet.read_word
-            guid        = packet.read_word
+            player_guid = packet.read_word
 
             if server.disconnected_players[player_name]
                 server.disconnected_players.delete player_name
             end
 
-            player = (server.players[player_name] ||= Player.new(server, player_name, guid))
-            player.guid = guid
+            # A player that has joined will not necessarily be in the game
+            # Their game may crash, and as such, they are only added to the scoreboard
+            # when their client is "authenticated".
 
-            server.logger.event(:join) { "[JOIN] <#{player_name}> has joined the server!" }
+            server.logger.event(:join) { "[JOIN] <#{player_name}> is joining the server!" }
+            server.plugin_manager.dispatch_event(event_name, { name: player_name, guid: player_guid })
+        end
 
-            server.plugin_manager.dispatch_event(event_name, { player: p })
+        event "player.onAuthenticated" do |server, packet|
+            event_name  = packet.read_word
+            player_name = packet.read_word
+
+            player_info = server.send_request("admin.listPlayers", "player", player_name)
+
+            if (player_info.read_word == "OK")
+                player = Player.from_info_block server, player_info.read_player_info_block.first
+                server.players[player_name] = player
+
+                server.plugin_manager.dispatch_event(event_name, { player: player })
+                server.logger.event(:auth) { "[AUTH] <#{player_name}> has been authenticated!" }
+            end
         end
 
         event "player.onSpawn" do |server, packet|
@@ -179,6 +185,19 @@ module Rubicon::Frostbite::BF3
             server.max_players = count
 
             server.plugin_manager.dispatch_event(event_name, { count: count })
+        end
+
+        event "server.onRoundOver" do |server, packet|
+            server.process_signal(:refresh_scoreboard)
+            server.logger.event(:round_over) { "[GAME] The round has ended." }
+            server.plugin_manager.dispatch_event("server.onRoundOver", { })
+        end
+
+        event "server.onLevelLoaded" do |server, packet|
+            server.process_signal(:refresh_scoreboard)
+
+            server.logger.event(:round_starting) { "[GAME] A new round will begin shortly." }
+            server.plugin_manager.dispatch_event("server.onLevelLoaded", { })
         end
     end
 end

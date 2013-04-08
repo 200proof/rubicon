@@ -139,37 +139,144 @@ module Rubicon::Frostbite::BF3
             @logger.with_progname(progname)
         end
 
+        # Adds a web stream to the list of streams
+        # to dispatch events to via `push_to_web_streams`
         def add_web_stream(stream)
             @web_streams << stream
             @logger.add_web_listener(stream)
 
-            # get a scoreboard sent to the stream right away
-            process_signal(:refresh_scoreboard)
+            # queue up a scoreboard refresh ASAP
+            message_channel.send :refresh_scoreboard
         end   
-        
+
+        # Removes a web stream from the list of streams
+        # to dispatch events to via `push_to_web_streams`
         def remove_web_stream(stream)
             @web_streams.delete stream
             @logger.remove_web_listener(stream)
         end
 
+        # Pushes an event to any web clients listening.
         def push_to_web_streams(event_name, data)
             @web_streams.each { |stream| stream.push event: event_name, data: JSON::dump(data) }
         end
 
+        # The message channel from which this server processes
+        # events and signals.
         def message_channel
             @connection.message_channel
         end
 
+        # Sends a command to the server, ignoring any responses
+        # to the command
         def send_command(*args)
             @connection.send_command(*args)
         end
 
+        # Sends a request to the server, and blocks until a response
+        # is received
         def send_request(*args)
-            ~send_request!(*args)
+            @connection.send_request(*args)
         end
 
+        # Sends a request to the server, and returns a promise
+        # whose value can be accessed via ~promise when it is
+        # responded to. 
         def send_request!(*args)
             @connection.send_request!(*args)
+        end
+
+        # Gets a list of players who are banned on this server
+        def ban_list
+            all_bans = []
+            last_offset = 0
+
+            loop do
+                packet = send_request("banList.list", last_offset)
+                status = packet.read_word
+
+                # every ban list entry has 6 words attached to it
+                break if (status != "OK") || (packet.words_left == 0) || (packet.words_left % 6 != 0)
+                until packet.words_left == 0
+                    all_bans << {
+                        id_type: packet.read_word,
+                        id: packet.read_word,
+                        ban_type: packet.read_word,
+                        seconds_left: packet.read_word,
+                        rounds_left: packet.read_word,
+                        reason: packet.read_word
+                    }
+                    last_offset += 1
+                end
+            end
+            all_bans
+        end
+
+        # Gets a list of players who have "VIP" status on the server (i.e., they get to
+        # skip the queue or have someone kicked to make room for them if aggressive joining
+        # is enabled on the server)
+        def reserved_slots
+            all_slots = []
+            last_offset = 0
+            loop do
+                packet = send_request("reservedSlotsList.list", last_offset)
+                status = packet.read_word
+
+                # every ban list entry has 6 words attached to it
+                break if (status != "OK") || (packet.words_left == 0)
+
+                last_offset += packet.words_left
+                all_slots += packet.remaining_words
+            end
+
+            all_slots
+        end
+
+        # Kicks `player_name`. If a reason is given, it is used instead of the
+        # BF3 server's default of "Kicked by administrator."
+        def kick_player(player_name, reason=nil)
+            if reason
+                send_command "admin.kickPlayer", player_name, reason
+            else
+                send_command "admin.kickPlayer", player_name
+            end
+        end
+
+        # Bans a player from the server.
+        #
+        # `id_type`       : Can be one of :name, :guid, or :ip
+        # `id`            : Which name/guid/ip the ban applies to
+        # `reason`        : The reason to tell the user. If this is left blank, the default is "Banned by admin"
+        # `timeout_type`  : Can be :perm, :rounds, or :seconds. Defaults to :perm.
+        # `timeout_length`: When the ban expires. If this is 0, the ban will be permanent regardless of `timeout_type`
+        #
+        # Returns the server's response to the command.
+        def ban_player(id_type, id, reason="", timeout_type=:perm, timeout_length=0)
+            raise "id_type must be one of :name, :guid, or :ip" unless [:name, :guid, :ip].include? id_type
+            raise "timeout_type must be one of :perm, :rounds, :seconds" unless [:perm, :rounds, :seconds].include? timeout_type
+
+            timeout_words = [timeout_type, timeout_length]
+            if timeout_type == :perm || timeout_length == 0
+                timeout_words = [:perm]
+            end
+
+            if reason != ""
+                send_request("banList.add", id_type, id, *timeout_words, reason).words.first
+            else
+                send_request("banList.add", id_type, id, *timeout_words).words.first
+            end
+        end
+
+        # Unbans a player from the server.
+        #
+        # `id_type`: can be one of :name, :guid, or :ip
+        # `id`     : which name/guid/ip to unban
+        #
+        # Returns the server's response to the command
+        def unban_player(id_type, id)
+            raise "id_type must be one of :name, :guid, or :ip" unless [:name, :guid, :ip].include? id_type
+
+            send_request("banList.remove", id_type, id).words.first
         end
     end
 
