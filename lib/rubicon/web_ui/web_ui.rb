@@ -80,7 +80,9 @@ module Rubicon::WebUI
             path = params[:splat].first
             exempt = /^\/(login|stylesheets\/.+|javascripts\/.+|__sinatra__)/
             unless current_user || exempt.match(path)
-                session[:redirect_to] = path unless path == "/login"
+                # Some browsers *cough* mobile *cough* like to request favicon/touch icons, which ends up
+                # overwriting the session's redirect_to, so ignore any images as well as a redirect to '/login'
+                session[:redirect_to] = path unless (path == "/login" || path.match(/\.(jpg|png|ico|gif)$/))
                 redirect "/login" 
             end
         end
