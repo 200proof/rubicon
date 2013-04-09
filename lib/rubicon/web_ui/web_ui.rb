@@ -162,16 +162,5 @@ module Rubicon::WebUI
                 error 404
             end 
         end
-
-        get "/:server/api" do
-            if server = Rubicon.servers[params[:server_name]]
-                sse_stream do |stream|
-                    server.add_web_logger(stream)
-                    stream.callback { server.remove_web_logger(stream) }
-                end
-            else
-                error 404
-            end
-        end
     end
 end
