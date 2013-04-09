@@ -12,8 +12,8 @@
 </ul>
  
 <div class="tab-content">
-  <div class="tab-pane active" id="scoreboard"><%= erb :"#{server.class::GAME_NAME}/_scoreboard", locals: { server: server } %></div>
-  <div class="tab-pane" id="ban-list">Ban List Here</div>
+  <div class="tab-pane active" id="scoreboard"><%= erb :"#{server.class::GAME_NAME}/_scoreboard" %></div>
+  <div class="tab-pane" id="ban-list"><%= erb :"#{server.class::GAME_NAME}/_ban-list" %></div>
   <div class="tab-pane" id="reserved-list">Reserved Slots Here</div>
   <div class="tab-pane" id="map-list">Map List Here</div>
   <div class="tab-pane" id="permissions">Permissions Here</div>

@@ -147,9 +147,17 @@ module Rubicon::WebUI
             end
         end
 
-        aget "/:server_name/api/players" do
+        aget "/:server_name/api/ban-list" do
             if server = Rubicon.servers[params[:server_name]]
-                threaded_render { JSON.generate server.players.to_hash }
+                threaded_render { JSON.generate server.ban_list }
+            else
+                error 404
+            end 
+        end
+
+        aget "/:server_name/api/reserved-slots" do
+            if server = Rubicon.servers[params[:server_name]]
+                threaded_render { JSON.generate server.reserved_slots }
             else
                 error 404
             end 

@@ -52,7 +52,7 @@ module Rubicon::Frostbite::BF3
         def initialize(server, name, guid=NO_GUID)
             @server = server
             @name = name
-            @guid = guid
+            @guid = guid || NO_GUID
 
             @team_id = 0
             @squad_id = 0

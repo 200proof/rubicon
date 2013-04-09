@@ -5,58 +5,71 @@
         <small>Maybe wait a couple seconds for the scoreboard to refresh?</small>
     </div>
     <!-- ko foreach: scoreboard.nonNeutralTeams -->
-        <div class="span6">
-            <table class="table table-striped table-hover table-border scoreboard" data-bind="attr: { id: 'scoreboard-' + id }">
-                <caption>
-                    <div class="row">
-                        <div class="span6">Team <span data-bind="text: id"></span></div>
-                        <strong class="span1" data-bind="text: score"></strong>
-                        <div class="progress progress-striped span4">
-                            <div class="bar" data-bind="style: { width: progressBarWidth }"></div>
+        <!-- ko if: hasPlayers -->
+            <div class="span6">
+                <table class="table table-hover table-border scoreboard" data-bind="attr: { id: 'team-' + id() }">
+                    <caption>
+                        <div class="row">
+                            <div class="span6">Team <span data-bind="text: id"></span></div>
+                            <strong class="span1" style="text-align: right" data-bind="text: score"></strong>
+                            <div class="progress progress-striped span4">
+                                <div class="bar" data-bind="style: { width: progressBarWidth }"></div>
+                            </div>
+                            <strong class="span1" style="text-align: left" data-bind="text: targetScore"></strong>
                         </div>
-                        <strong class="span1" data-bind="text: targetScore"></strong>
-                    </div>
-                </caption>
-                <thead>
-                    <th class="rank-icon-cell"></th>
-                    <th>Name</th>
-                    <th>Kills</th>
-                    <th>Deaths</th>
-                    <th>Score</th>
-                </thead>
-                <tbody data-bind="foreach: players">
-                    <tr class="player-row" data-bind="attr: { id: name }">
-                        <td class="rank-icon-cell"><i class="sprite" data-bind="css: 'sprite-rank-' + rank"></i></td>
-                        <td><span data-bind="text: name"></span></td>
-                        <td data-bind="text: kills"></td>
-                        <td data-bind="text: deaths"></td>
-                        <td data-bind="text: score"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                    </caption>
+                    <thead>
+                        <th class="rank-icon-cell"></th>
+                        <th>Name</th>
+                        <th>Kills</th>
+                        <th>Deaths</th>
+                        <th>Score</th>
+                    </thead>
+                    <tbody data-bind="foreach: players">
+                        <tr class="player-row" data-bind="
+                            attr: { id: name, class: 'squad-' + squad() },
+                            click: function() { $root.scoreboard.openUserModal($data) },
+                            event: {
+                                mouseenter: function() { $root.scoreboard.highlightSquadmates($data) },
+                                mouseleave: function() { $root.scoreboard.removeSquadmateHighlights($data) }
+                            }">
+                            <td class="rank-icon-cell"><i class="sprite" data-bind="css: 'sprite-rank-' + rank()"></i></td>
+                            <td><span data-bind="text: name"></span></td>
+                            <td data-bind="text: kills"></td>
+                            <td data-bind="text: deaths"></td>
+                            <td data-bind="text: score"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <!-- /ko -->
     <!-- /ko -->
     <!-- ko if: scoreboard.hasNeutralPlayers -->
         <div class="span12">
-            <table class="table table-striped table-hover table-border scoreboard" id="scoreboard-0">
+            <table class="table table-hover table-border scoreboard" id="scoreboard-0">
                 <caption>Neutral Players</caption>
                 <thead>
                     <th class="rank-icon-cell"></th>
                     <th>Name</th>
-                    <th>Kills</th>
-                    <th>Deaths</th>
-                    <th>Score</th>
                 </thead>
                 <tbody data-bind="foreach: scoreboard.neutralPlayers().players">
-                    <tr class="player-row" data-bind="attr: { id: name }">
-                        <td class="rank-icon-cell"><i class="sprite" data-bind="css: 'sprite-rank-' + rank"></i></td>
+                    <tr class="player-row" data-bind="attr: { id: name }, click: function() { console.log($data.team().id()) }">
+                        <td class="rank-icon-cell"><i class="sprite" data-bind="css: 'sprite-rank-' + rank()"></i></td>
                         <td><span data-bind="text: name"></span></td>
-                        <td data-bind="text: kills"></td>
-                        <td data-bind="text: deaths"></td>
-                        <td data-bind="text: score"></td>
                     </tr>
                 </tbody>
             </table>
         </div>
     <!-- /ko -->
+</div>
+
+<div class="fade" data-bind="modal: scoreboard.currentModalUser">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3 data-bind="text: name"></h3>
+        <span class="muted" data-bind="text: guid"></span>
+    </div>
+    <div class="modal-body">
+        <p>tests</p>
+    </div>
 </div>
