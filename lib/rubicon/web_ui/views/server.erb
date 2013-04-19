@@ -16,7 +16,7 @@
   <div class="tab-pane active" id="scoreboard"><%= erb :"#{server.class::GAME_NAME}/_scoreboard" %></div>
   <div class="tab-pane" id="chat"><%= erb :"#{server.class::GAME_NAME}/_chat" %></div>
   <div class="tab-pane" id="ban-list"><%= erb :"#{server.class::GAME_NAME}/_ban-list" %></div>
-  <div class="tab-pane" id="reserved-list">Reserved Slots Here <input type="text" class="player-name" /></div>
+  <div class="tab-pane" id="reserved-list"><%= erb :"#{server.class::GAME_NAME}/_reserved-list" %></div>
   <div class="tab-pane" id="map-list">Map List Here</div>
   <div class="tab-pane" id="permissions">Permissions Here</div>
   <div class="tab-pane" id="log"><%= erb :_server_logstream, locals: { server: server } %></div>

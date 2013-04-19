@@ -54,7 +54,7 @@ footer p
 tr.squad-highlight:hover > td
     background-color: #C5DEC1 !important
 
-tbody.loading-row td
+.loading-row, .loading-row td
     text-align: center
     font-style: italic
 
@@ -67,3 +67,27 @@ tbody.loading-row td
 
     button
         width: 6.5%
+
+.reserved-slot-entry
+    width: 284px
+    padding: 8px
+    line-height: 21px
+    border-top: 1px solid #ddd
+    margin-left: 0
+
+.reserved-slot-entry:nth-of-type(3n+1)
+    padding-left: 68px
+
+.reserved-slot-entry:nth-of-type(6n+3), .reserved-slot-entry:nth-of-type(6n+2), .reserved-slot-entry:nth-of-type(6n+1)
+    background-color: #f9f9f9
+
+.reserved-slot-entry:hover
+    background-color: #f5f5f5
+    cursor: pointer
+
+input[name=new-slot-name]
+    height: 14px
+    font-size: 10px
+    line-height: 14px
+    padding: 0
+    margin: 0

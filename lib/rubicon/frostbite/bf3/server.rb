@@ -293,7 +293,10 @@ module Rubicon::Frostbite::BF3
         #
         # Returns the server's response to the command
         def add_reserved_slot(name)
-            send_request("reservedSlotsList.add", name)
+            packet = send_request("reservedSlotsList.add", name)
+            send_request("reservedSlotsList.save")
+
+            packet
         end
 
         # Removes a player from the reserved slots list
@@ -302,7 +305,10 @@ module Rubicon::Frostbite::BF3
         #
         # Returns the server's response to the command
         def remove_reserved_slot(name)
-            send_request("reservedSlotsList.remove", "name", name)
+            packet = send_request("reservedSlotsList.remove", name)
+            send_request("reservedSlotsList.save")
+
+            packet
         end
     end
 

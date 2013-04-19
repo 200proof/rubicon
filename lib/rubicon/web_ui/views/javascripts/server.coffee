@@ -202,7 +202,7 @@ class ChatViewModel
             $.post "#{window.APIPath}/say", requestObject, (response) ->
                 $("input[name=message]").val("")
                 $("#chat-form :input").attr("disabled", false)
-                
+
             return
 
     # using bootstrap colors because #yolo
@@ -245,10 +245,10 @@ class BanListViewModel
         @entries = ko.observableArray([])
         @refreshEntries = ->
             self.entries([])
-            $("#ea-ban-list .loading-row").toggle()
+            $("#ea-ban-list .loading-row").show()
             $.getJSON "#{window.APIPath}/ban-list", (json) ->
                 self.entries.push(new BanModel(entry)) for entry in json
-                $("#ea-ban-list .loading-row").toggle()
+                $("#ea-ban-list .loading-row").hide()
                 return
 
         @currentModalBan = ko.observable()
@@ -264,6 +264,55 @@ class BanListViewModel
             console.log "Undo a ban here, yeah?"
             console.log ban
             self.closeBanModal()
+            return
+
+class ReservedListViewModel
+    constructor: ->
+        self = @
+        @entries = ko.observableArray([])
+        @refreshEntries = ->
+            self.entries([])
+            $("#reserved-list .loading-row").show()
+            $.getJSON "#{window.APIPath}/reserved-slots", (json) ->
+                $("#reserved-list .loading-row").hide()
+                self.entries(json)
+                return
+
+        @currentModalSlot = ko.observable()
+        @openRemoveModal = (username) ->
+            self.currentModalSlot(username)
+            return
+
+        @closeRemoveModal = ->
+            self.currentModalSlot(undefined)
+            return
+
+        @removeSlot = (name) ->
+            $.ajax
+                method:  "DELETE"
+                url:     "#{window.APIPath}/reserved-slots/#{name}"
+                success: (e) ->
+                    self.refreshEntries()
+                    return
+
+            self.closeRemoveModal()
+            return
+
+        @addSlot = (inputField) ->
+            name = inputField.value
+
+            $(inputField).attr "disabled", true
+            $(inputField).val("Adding #{name}...")
+
+            $.ajax
+                method:  "PUT"
+                url:     "#{window.APIPath}/reserved-slots/#{name}"
+                success: (e) ->
+                    $(inputField).attr "disabled", false
+                    $(inputField).val ""
+                    self.refreshEntries()
+                    return
+
             return
 
 setupSSE = ->
@@ -305,19 +354,21 @@ setupSSE = ->
 $ ->
     window.APIPath = "#{window.location.pathname}/api"
 
-    window.ServerState = new ServerModel()
-    window.LogVM = new LogViewModel()
-    window.ChatVM = new ChatViewModel()
-    window.ScoreboardVM = new ScoreboardViewModel()
-    window.BanListVM = new BanListViewModel()
+    window.ServerState    = new ServerModel()
+    window.LogVM          = new LogViewModel()
+    window.ChatVM         = new ChatViewModel()
+    window.ScoreboardVM   = new ScoreboardViewModel()
+    window.BanListVM      = new BanListViewModel()
+    window.ReservedListVM = new ReservedListViewModel()
 
     setupSSE()
 
     ko.applyBindings
-        "logStream": window.LogVM,
+        "logStream":    window.LogVM,
         "chatMessages": window.ChatVM,
-        "scoreboard": window.ScoreboardVM,
-        "banList": window.BanListVM
+        "scoreboard":   window.ScoreboardVM,
+        "banList":      window.BanListVM,
+        "reservedList": window.ReservedListVM
 
     $(".loading-row").toggle()
 
@@ -326,6 +377,9 @@ $ ->
 
     $("a[data-target=#ban-list]").on "shown", ->
         window.BanListVM.refreshEntries()
+
+    $("a[data-target=#reserved-list]").on "shown", ->
+        window.ReservedListVM.refreshEntries()
 
     $("input.player-name").typeahead
         source: window.ServerState.playerNames
@@ -338,5 +392,8 @@ $ ->
                 window.ChatVM.sendChat false
 
         return true
+
+    $("input[name=new-slot-name]").bind "keypress", (e) ->
+        window.ReservedListVM.addSlot(e.target) if (e.which == 13)
 
     return

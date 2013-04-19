@@ -35,6 +35,29 @@ aget "/:server_name/api/reserved-slots" do
     end 
 end
 
+aput "/:server_name/api/reserved-slots/:name" do
+    if server = Rubicon.servers[params[:server_name]]
+        name = params[:name]
+        threaded_render { server.add_reserved_slot(name).read_word }
+    else
+        error 404
+    end  
+end
+
+adelete "/:server_name/api/reserved-slots/:name" do
+    if server = Rubicon.servers[params[:server_name]]
+        name = params[:name]
+
+        if name != "" && name.length < 17
+            threaded_render { server.remove_reserved_slot(name).read_word }
+        else
+            error 400
+        end
+    else
+        error 404
+    end  
+end
+
 apost "/:server_name/api/say" do
     if server = Rubicon.servers[params[:server_name]]
         message  = params[:message]
