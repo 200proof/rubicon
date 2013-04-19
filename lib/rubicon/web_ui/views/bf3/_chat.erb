@@ -1,0 +1,42 @@
+<div class="scrollable-table-wrapper" id="chat-table">
+    <table class="table table-border text-center">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Player</th>
+                <th>Audience</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: { data: chatMessages.messages, afterRender: chatMessages.stickyAutoscroller }">
+            <tr data-bind="css: colorCode">
+                <td data-bind="text: time"></td>
+                <td data-bind="text: player"></td>
+                <td data-bind="text: audience"></td>
+                <td data-bind="text: message"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div id="chat-input">
+    <form onsubmit="return false;" class="form-horizontal" id="chat-form">
+        <input type="text" placeholder="Enter a message. Press enter to chat, or ctrl+enter to yell for 20 seconds." name="message" />
+        <select name="audience">
+            <optgroup label="Player Groups">
+                <option value="all">All</option>
+                <!-- ko foreach: scoreboard.nonNeutralTeams -->
+                    <!-- ko if: hasPlayers() -->
+                    <option data-bind="text: 'Team ' + id(), value: 'team '+ id()"></option>
+                    <!-- /ko -->
+                <!-- /ko -->
+            </optgroup>
+            <optgroup label="Specific Players">
+                <!-- ko foreach: window.ServerState.playerNames() -->
+                <option data-bind="text: $data, value: 'player ' + $data"></option>
+                <!-- /ko -->
+            </optgroup>
+        </select>
+        <button type="button" class="btn btn-info" />Chat</button>
+        <button type="button" class="btn btn-warn" />Yell</button>
+    </form>
+</div>

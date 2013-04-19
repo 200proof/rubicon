@@ -54,6 +54,9 @@ module Rubicon::Frostbite::BF3
             Rubicon.servers[@config[:name]] = self
 
             process_signal(:refresh_scoreboard)
+            
+            @scoreboard_timer = Rubicon::Util::Timer.new (5) { message_channel.send :refresh_scoreboard }
+            @scoreboard_timer.start!
 
             @plugin_manager = Rubicon::PluginManager.new(self)
             @connection.send_command "admin.eventsEnabled", "true"
@@ -100,6 +103,7 @@ module Rubicon::Frostbite::BF3
 
         # Disables all plugins, saves config and closes the connection.
         def shutdown!
+            @scoreboard_timer.stop
             Rubicon.servers.delete @config[:name]
             @connection.close_connection
         end
@@ -242,6 +246,10 @@ module Rubicon::Frostbite::BF3
             end
         end
 
+        def kill_player(player_name)
+            send_command "admin.killPlayer", name
+        end
+
         # Bans a player from the server.
         #
         # `id_type`       : Can be one of :name, :guid, or :ip
@@ -277,6 +285,24 @@ module Rubicon::Frostbite::BF3
             raise "id_type must be one of :name, :guid, or :ip" unless [:name, :guid, :ip].include? id_type
 
             send_request("banList.remove", id_type, id).words.first
+        end
+
+        # Adds a player to the reserved slot list
+        #
+        # `name`: the name of the player to add to the list
+        #
+        # Returns the server's response to the command
+        def add_reserved_slot(name)
+            send_request("reservedSlotsList.add", name)
+        end
+
+        # Removes a player from the reserved slots list
+        #
+        # `name`: the name of the player to remove from the list
+        #
+        # Returns the server's response to the command
+        def remove_reserved_slot(name)
+            send_request("reservedSlotsList.remove", "name", name)
         end
     end
 

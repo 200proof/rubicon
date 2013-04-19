@@ -1,9 +1,13 @@
 <div class="row">
-    <div data-bind="css: { 'hide': scoreboard.hasPlayers }" class="span12 text-center">
+    <div class="span12 text-center" data-bind="css: { 'hide': window.ServerState.loadedAtLeastOnce() }">
+        <p>Loading the scoreboard...</p>
+    </div>
+    <!-- ko if: window.ServerState.loadedAtLeastOnce() -->
+    <div data-bind="css: { 'hide': scoreboard.hasPlayers } " class="span12 text-center">
         <h2>OH NOES D:</h2>
         <p>This server has no players connected!</p>
-        <small>Maybe wait a couple seconds for the scoreboard to refresh?</small>
     </div>
+    <!-- /ko -->
     <!-- ko foreach: scoreboard.nonNeutralTeams -->
         <!-- ko if: hasPlayers -->
             <div class="span6">

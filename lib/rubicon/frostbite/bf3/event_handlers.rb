@@ -17,7 +17,7 @@ module Rubicon::Frostbite::BF3
                 event_args = { player: server.players[victim], weapon: weapon }
 
                 server.logger.event(:suicide) { "[SCDE] #{victim} killed themselves via #{weapon.name}" }
-
+                server.push_to_web_streams "suicide", { player: victim, weapon: weapon.name }
                 server.plugin_manager.dispatch_event("player.onSuicide", event_args)
             else
                 killer_p = server.players[killer]
@@ -28,7 +28,7 @@ module Rubicon::Frostbite::BF3
                 event_args = { killer: killer_p, victim: victim_p, weapon: weapon, headshot?: headshot }
 
                 server.logger.event(:kill) { "[KILL] " + "#{killer} <#{"(*)" if headshot}#{weapon.name}> #{victim}" }
-
+                server.push_to_web_streams "kill", { killer: killer, victim: victim, weapon: weapon.name, headshot: headshot }
                 server.plugin_manager.dispatch_event("player.onKill", event_args)
             end
         end
@@ -39,7 +39,10 @@ module Rubicon::Frostbite::BF3
             message    = packet.read_word
             audience   = packet.read_word
 
-            # These are messages sent by other RCons, ignore them.
+            # Get the target for specific audiences
+            audience += " #{packet.read_word}" if audience.match /player|team|squad/
+
+            server.push_to_web_streams "chat", { time: Time.now.to_s, player: player.name, message: message, audience: audience }
             next if player.name == "Server"
 
             if message[0] == "/"
@@ -108,6 +111,7 @@ module Rubicon::Frostbite::BF3
 
             player = server.players[player_name]
             player.disconnected
+            
             server.players.delete player_name
 
             server.disconnected_players[player_name] = player
@@ -166,7 +170,6 @@ module Rubicon::Frostbite::BF3
                 }
 
                 server.logger.event(:squad_change) { "[TEAM] <#{player_name}> has switched from team #{old_team.id} to team #{new_team.id}" }
-
                 server.plugin_manager.dispatch_event(event_name, event_args)
             end
         end
@@ -190,6 +193,7 @@ module Rubicon::Frostbite::BF3
         event "server.onRoundOver" do |server, packet|
             server.process_signal(:refresh_scoreboard)
             server.logger.event(:round_over) { "[GAME] The round has ended." }
+            server.push_to_web_streams "round_over", {}
             server.plugin_manager.dispatch_event("server.onRoundOver", { })
         end
 
@@ -197,6 +201,7 @@ module Rubicon::Frostbite::BF3
             server.process_signal(:refresh_scoreboard)
 
             server.logger.event(:round_starting) { "[GAME] A new round will begin shortly." }
+            server.push_to_web_streams "round_starting", {}
             server.plugin_manager.dispatch_event("server.onLevelLoaded", { })
         end
     end

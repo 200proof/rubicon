@@ -40,7 +40,8 @@ footer p
     margin-bottom: 15px
     padding: 7px 9px
 
-.tab-pane#log
+.scrollable-table-wrapper
+    width: 100%
     height: 500px
     overflow: scroll
 
@@ -52,3 +53,17 @@ footer p
 
 tr.squad-highlight:hover > td
     background-color: #C5DEC1 !important
+
+tbody.loading-row td
+    text-align: center
+    font-style: italic
+
+#chat-form
+    input[name=message]
+        width: 60%
+
+    select[name=audience]
+        width: 22.5%
+
+    button
+        width: 6.5%

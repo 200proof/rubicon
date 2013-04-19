@@ -103,7 +103,7 @@ module Rubicon::WebUI
             if current_user
                 redirect '/'
             else
-                headers "Status" => "401"
+                status 401
                 erb :login
             end
         end
@@ -116,7 +116,7 @@ module Rubicon::WebUI
                 redirect redirect_dest
             else
                 flash[:error] = "Invalid username or password!"
-                headers "Status" => "401"
+                status 401
                 erb :login
             end
         end
@@ -138,31 +138,7 @@ module Rubicon::WebUI
             end
         end
 
-        get "/:server_name/api/stream" do
-            if server = Rubicon.servers[params[:server_name]]
-                sse_stream do |stream|
-                    server.add_web_stream(stream)
-                    stream.callback { server.remove_web_stream(stream) }
-                end
-            else
-                error 404
-            end
-        end
-
-        aget "/:server_name/api/ban-list" do
-            if server = Rubicon.servers[params[:server_name]]
-                threaded_render { JSON.generate server.ban_list }
-            else
-                error 404
-            end 
-        end
-
-        aget "/:server_name/api/reserved-slots" do
-            if server = Rubicon.servers[params[:server_name]]
-                threaded_render { JSON.generate server.reserved_slots }
-            else
-                error 404
-            end 
-        end
+        # API has been seperated into its own module for great justice
+        class_eval File.read(File.expand_path("../api.rb", __FILE__))
     end
 end

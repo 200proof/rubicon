@@ -4,6 +4,7 @@ class ServerModel
         @teams = ko.observableArray()
         @targetScore = ko.observable 0
         @players = ko.observable {}
+        @loadedAtLeastOnce = ko.observable false
 
         @teams.push(new TeamModel(team_num, [], 0)) for team_num in [0..16]
 
@@ -39,31 +40,43 @@ class ServerModel
 
                 if player
                     player.update(playerJSON, team)
-                    ret.push player
                 else
                     player = new PlayerModel(playerJSON, team)
                     @players()[playerJSON.name] = player
-                    ret.push player
+
+                ret.push player
 
             @players.valueHasMutated()
             return ret
 
+        @addChatMessage = (json) ->
+            msg = {
+                "time": json.time,
+                "player": json.player,
+                "audience": json.audience,
+                "colorCode": window.ChatVM.colorForAudience[json.audience],
+                "message": json.message
+            }
+            window.ChatVM.addItem(msg)
 
-        # Have to explicitly name window.ServerState as bootstrap's typeahead
-        # doesn't set `this` properly
+            return if json.player == "Server"
+
+            @players()[json.player].addChatMessage(msg)
+
         @playerNames = ->
-            Object.keys(window.ServerState.players())
+            Object.keys(self.players())
 
 class PlayerModel
     constructor: (json, team) ->
-        @name   = ko.observable json.name
-        @guid   = ko.observable json.guid
-        @rank   = ko.observable json.rank
-        @kills  = ko.observable json.kills
-        @deaths = ko.observable json.deaths
-        @score  = ko.observable json.score
-        @team   = ko.observable team
-        @squad  = ko.observable json.squad
+        @name     = ko.observable json.name
+        @guid     = ko.observable json.guid
+        @rank     = ko.observable json.rank
+        @kills    = ko.observable json.kills
+        @deaths   = ko.observable json.deaths
+        @score    = ko.observable json.score
+        @team     = ko.observable team
+        @squad    = ko.observable json.squad
+        @messages = ko.observableArray([])
 
         @update = (json, team) ->
             @name(json.name)
@@ -76,6 +89,10 @@ class PlayerModel
                 @team().players.remove(@)
                 @team(team)
             @squad(json.squad)
+            return
+
+        @addChatMessage = (msg) ->
+            @messages.push msg
             return
 
 
@@ -104,14 +121,11 @@ class ScoreboardViewModel
         @teams = window.ServerState.teams
 
         @hasPlayers = ko.computed ->
-            allEmpty = true
-
             for team in @teams()
                 if team.players().length != 0
-                    allEmpty = false
-                    break
+                    return true
 
-            !allEmpty
+            false
         , @
 
         @nonNeutralTeams = ko.computed ->
@@ -146,18 +160,57 @@ class LogViewModel
         @logItems = ko.observableArray()
 
         @stickyAutoscroller = (forceScroll) ->
-            height = $(".tab-pane#log > table").height()
-            scroll = $(".tab-pane#log").scrollTop()
-            tolerance = $(".tab-pane#log").height() + 50
+            height = $("#log-table > table").height()
+            scroll = $("#log-table").scrollTop()
+            tolerance = $("#log-table").height() + 50
 
             if ((height - scroll) < tolerance || forceScroll == true)
-                $(".tab-pane#log").scrollTop(height)
-
+                $("#log-table").scrollTop(height)
             return
 
         @addLogItem = (msg) ->
             @logItems.shift() if @logItems().length > 350
-            @logItems.push (msg)
+            @logItems.push(msg)
+
+class ChatViewModel
+    constructor: ->
+        @messages = ko.observableArray()
+
+        @stickyAutoscroller = (forceScroll) ->
+            height = $("#chat-table > table").height()
+            scroll = $("#chat-table").scrollTop()
+            tolerance = $("#chat-table").height() + 50
+
+            if ((height - scroll) < tolerance || forceScroll == true)
+                $("#chat-table").scrollTop(height)
+
+            return
+
+        @addItem = (msg) ->
+            @messages.shift() if @messages().length > 350
+            @messages.push(msg) 
+            return
+
+        @sendChat = (yell) ->
+            requestObject = 
+                message: $("input[name=message]").val(),
+                audience: $("select[name=audience]").val(),
+                yell: yell
+
+            $("#chat-form :input").attr("disabled", true)
+
+            $.post "#{window.APIPath}/say", requestObject, (response) ->
+                $("input[name=message]").val("")
+                $("#chat-form :input").attr("disabled", false)
+                
+            return
+
+    # using bootstrap colors because #yolo
+    colorForAudience: {
+        "all"  : "",
+        "squad": "success",
+        "team" : "info"
+    }
 
 class BanModel
     constructor: (json) ->
@@ -191,8 +244,11 @@ class BanListViewModel
         self = @
         @entries = ko.observableArray([])
         @refreshEntries = ->
+            self.entries([])
+            $("#ea-ban-list .loading-row").toggle()
             $.getJSON "#{window.APIPath}/ban-list", (json) ->
-                window.BanListVM.entries.push(new BanModel(entry)) for entry in json
+                self.entries.push(new BanModel(entry)) for entry in json
+                $("#ea-ban-list .loading-row").toggle()
                 return
 
         @currentModalBan = ko.observable()
@@ -216,20 +272,21 @@ setupSSE = ->
     EventStream.addEventListener "log", (event) ->
         logMessage = $.parseJSON(event.data)
         logMessage["colorCode"] = "info"
-        window.LogVM.addLogItem(logMessage) #checkme
+        window.LogVM.addLogItem(logMessage)
         return
     , false
 
     EventStream.addEventListener "event", (event) ->
         logMessage = $.parseJSON(event.data)
         logMessage["colorCode"] = ""
-        window.LogVM.addLogItem(logMessage) #checkme
+        window.LogVM.addLogItem(logMessage)
         return
     , false
 
     EventStream.addEventListener "scoreboard", (event) ->
         scoreboard = $.parseJSON(event.data)
         window.ServerState.updateScoreboard(scoreboard)
+        window.ServerState.loadedAtLeastOnce(true)
         return
     , false
 
@@ -239,11 +296,18 @@ setupSSE = ->
         return
     , false
 
+    EventStream.addEventListener "chat", (event) ->
+        messageInfo = $.parseJSON(event.data)
+        window.ServerState.addChatMessage(messageInfo)
+        return
+    , false
+
 $ ->
     window.APIPath = "#{window.location.pathname}/api"
 
     window.ServerState = new ServerModel()
     window.LogVM = new LogViewModel()
+    window.ChatVM = new ChatViewModel()
     window.ScoreboardVM = new ScoreboardViewModel()
     window.BanListVM = new BanListViewModel()
 
@@ -251,8 +315,11 @@ $ ->
 
     ko.applyBindings
         "logStream": window.LogVM,
-        "scoreboard": window.ScoreboardVM
+        "chatMessages": window.ChatVM,
+        "scoreboard": window.ScoreboardVM,
         "banList": window.BanListVM
+
+    $(".loading-row").toggle()
 
     $("a[data-target=#log]").on "shown", ->
         window.LogVM.stickyAutoscroller(true)
@@ -262,5 +329,14 @@ $ ->
 
     $("input.player-name").typeahead
         source: window.ServerState.playerNames
+
+    $("#chat-form > *").bind "keypress", (e) ->
+        if (e.which == 13) # 13 == enter
+            if e.ctrlKey
+                window.ChatVM.sendChat true
+            else
+                window.ChatVM.sendChat false
+
+        return true
 
     return

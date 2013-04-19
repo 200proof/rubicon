@@ -122,12 +122,12 @@ module Rubicon::Frostbite::BF3
             end
         end
 
-        # Says `msg` to every player's chatbox.
+        # Says `msg` to a player's chatbox.
         def say(msg)
             @server.send_command("admin.say", msg, "player", @name)
         end
 
-        # Yells `msg` to the entire server for `duration` seconds.
+        # Yells `msg` to the player for `duration` seconds.
         def yell(msg, duration)
             @server.send_command("admin.yell", msg, duration, "player", @name)
         end
@@ -140,7 +140,7 @@ module Rubicon::Frostbite::BF3
 
         # Kill the player.
         def kill
-            @server.send_command("admin.killPlayer", @name)
+            @server.kill_player @name
         end
 
         # Called when the player leaves the server. It removes the player from the squad

@@ -4,6 +4,7 @@
 
 <ul class="nav nav-tabs" id="server-tabs">
   <li class="active"><a data-toggle="tab" data-target="#scoreboard"><i class="icon-group"></i>Scoreboard</a></li>
+  <li><a data-toggle="tab" data-target="#chat"><i class="icon-comments"></i>Chat</a></li>
   <li><a data-toggle="tab" data-target="#ban-list"><i class="icon-minus-sign"></i>Ban List</a></li>
   <li><a data-toggle="tab" data-target="#reserved-list"><i class="icon-star"></i>Reserved Slots</a></li>
   <li><a data-toggle="tab" data-target="#map-list"><i class="icon-globe"></i>Map List</a></li>
@@ -13,8 +14,9 @@
  
 <div class="tab-content">
   <div class="tab-pane active" id="scoreboard"><%= erb :"#{server.class::GAME_NAME}/_scoreboard" %></div>
+  <div class="tab-pane" id="chat"><%= erb :"#{server.class::GAME_NAME}/_chat" %></div>
   <div class="tab-pane" id="ban-list"><%= erb :"#{server.class::GAME_NAME}/_ban-list" %></div>
-  <div class="tab-pane" id="reserved-list">Reserved Slots Here</div>
+  <div class="tab-pane" id="reserved-list">Reserved Slots Here <input type="text" class="player-name" /></div>
   <div class="tab-pane" id="map-list">Map List Here</div>
   <div class="tab-pane" id="permissions">Permissions Here</div>
   <div class="tab-pane" id="log"><%= erb :_server_logstream, locals: { server: server } %></div>

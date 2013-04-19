@@ -5,7 +5,7 @@ module Rubicon
 
     def self.disconnected
         @@running_clients -= 1
-        shutdown! if @@running_clients < 1
+        EventMachine.stop_event_loop if @@running_clients < 1
     end
 
     def self.logger(progname="Rubicon")
@@ -31,7 +31,9 @@ module Rubicon
 
     def self.start_web_ui
         @@thin_instance = Thin::Server.new @@config["webui"]["listen"]["ip"], @@config["webui"]["listen"]["port"], 
-            Rubicon::WebUI::WebUIApp, signals: false
+            Rubicon::WebUI::WebUIApp, signals: false, threaded: true
+
+        # for some reason threaded: true doesnt set threaded mode :/
         @@thin_instance.threaded = true
         @@thin_instance.start
     end
@@ -43,10 +45,7 @@ module Rubicon
         @@thin_instance.stop!
         @@shutting_down = true
         # TODO: change me back to a normal value when i'm done deving
-        unless @@refresh_timer.join(2); @@refresh_timer.kill; end
         servers.each_value { |server| server.message_channel.send(:shutdown); }
-        EM.stop_event_loop # User might potentially have to wait if we 
-                           # shutdown while a connection is waiting to time out
     rescue Exception => e
         logger.fatal ("Exception shutting down! #{e.message} (#{e.class})")
         logger.fatal (e.backtrace || [])[0..10].join("\n") 
@@ -77,18 +76,6 @@ module Rubicon
                 logger.info ("Received SIGINT/SIGTERM, shutting down gracefully.")
                 Rubicon.shutdown!
             }
-        end
-
-        # EM::PeriodicTimer seems to block the whole event loop except on JRuby 
-        # (tested on MRI 1.9.3, MRI 2.0, and Rubinius 2.0.0dev)
-        # so I'm using a thread that loops instead
-        @@refresh_timer = Thread.new do
-            until @@shutting_down
-                logger.debug { "Dispatching :refresh_scoreboard" }
-                servers.each_value { |server| server.message_channel.send :refresh_scoreboard }
-                logger.debug { "All :refresh_scoreboards dispatched" }
-                sleep 5
-            end
         end
 
         Signal.trap "INT", shutdown_proc
