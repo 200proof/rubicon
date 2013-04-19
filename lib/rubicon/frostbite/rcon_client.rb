@@ -93,7 +93,6 @@ module Rubicon::Frostbite
             dispatch_packet(packet)
 
             ret_promise
-        rescue Exception => e; p e
         end
 
         def logger(progname="RconClient")
