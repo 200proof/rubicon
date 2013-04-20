@@ -26,7 +26,7 @@ module Rubicon::Frostbite::BF3
 
             @teams = []
 
-            @connection_mutex = Mutex.new
+            @mutex = Mutex.new
 
             # 0 = neutral, 16 possible teams
             17.times do |idx|
@@ -135,7 +135,7 @@ module Rubicon::Frostbite::BF3
             send_command("admin.say", msg, "all")
         end
 
-        def yell(message, duration=15)
+        def yell(message, duration=20)
             send_command("admin.yell", msg, duration, "all")
         end
 
