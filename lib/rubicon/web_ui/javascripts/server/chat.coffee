@@ -49,12 +49,6 @@ class ChatViewModel
             
             self.sendChat message, audience, yell
 
-        @sendChatFromPlayerForm = (yell) ->
-            message  = $("input[name=send-player-message]").val()
-            audience = "player #{window.ScoreboardVM.currentModalUser().name()}"
-            
-            self.sendChat message, audience, yell
-
         @hookEvents = ->
             $("a[data-target=#chat]").on "shown", ->
                 self.stickyAutoscroller(true)

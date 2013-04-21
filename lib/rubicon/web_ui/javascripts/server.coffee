@@ -51,7 +51,8 @@ $ ->
     window.ScoreboardVM   = new ScoreboardViewModel()
     window.BanListVM      = new BanListViewModel()
     window.ReservedListVM = new ReservedListViewModel()
-    window.PlayerModalVM  = new PlayerModalViewModel()
+
+    window.PlayerModalVM  = new PlayerModalViewModel(window.ChatVM)
 
     setupSSE(window.ServerState, window.LogVM)
 

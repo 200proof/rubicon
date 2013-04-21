@@ -1,5 +1,5 @@
 class PlayerModalViewModel
-    constructor: ->
+    constructor: (chatVM) ->
         self = @
         @currentModalPlayer = ko.observable()
 
@@ -14,3 +14,9 @@ class PlayerModalViewModel
         @hookEvents = ->
             # Chat events are hooked in chat.coffee
             return
+
+        @sendChat = (yell) ->
+            message  = $("input[name=send-player-message]").val()
+            audience = "player #{self.currentModalPlayer().name()}"
+
+            chatVM.sendChat message, audience, yell
