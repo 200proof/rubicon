@@ -21,3 +21,5 @@
   <div class="tab-pane" id="permissions">Permissions Here</div>
   <div class="tab-pane" id="log"><%= erb :_server_logstream, locals: { server: server } %></div>
 </div>
+
+<%= erb :"#{server.class::GAME_NAME}/_player-modal" %>

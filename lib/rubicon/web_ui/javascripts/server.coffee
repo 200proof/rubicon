@@ -4,6 +4,7 @@
 #include "server/chat"
 #include "server/ban_list"
 #include "server/reserved_list"
+#include "server/player_modal"
 
 setupSSE = (serverState, logVM) ->
     window.EventStream = new EventSource "#{window.APIPath}/stream"
@@ -50,7 +51,8 @@ $ ->
     window.ScoreboardVM   = new ScoreboardViewModel()
     window.BanListVM      = new BanListViewModel()
     window.ReservedListVM = new ReservedListViewModel()
-    
+    window.PlayerModalVM  = new PlayerModalViewModel()
+
     setupSSE(window.ServerState, window.LogVM)
 
     ko.applyBindings
@@ -58,12 +60,14 @@ $ ->
         "chatMessages": window.ChatVM,
         "scoreboard":   window.ScoreboardVM,
         "banList":      window.BanListVM,
-        "reservedList": window.ReservedListVM
+        "reservedList": window.ReservedListVM,
+        "playerModal":  window.PlayerModalVM,
 
     window.LogVM.hookEvents()
     window.ChatVM.hookEvents()
     window.BanListVM.hookEvents()
     window.ReservedListVM.hookEvents()
+    window.PlayerModalVM.hookEvents()
 
     $("input.player-name").typeahead
         source: window.ServerState.playerNames

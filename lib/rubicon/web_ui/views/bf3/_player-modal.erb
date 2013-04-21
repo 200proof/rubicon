@@ -1,0 +1,41 @@
+<div class="fade" data-bind="modal: playerModal.currentModalPlayer" id="scoreboard-player-modal">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <div id="modal-name-and-actions">
+            <h3 data-bind="text: name" id="modal-player-name"></h3>
+            <div id="modal-player-actions">
+                <button class="btn btn-mini btn-inverse">Kill</button>
+                <button class="btn btn-mini btn-warning">Kick</button>
+                <button class="btn btn-mini btn-danger">Ban</button>
+            </div>
+        </div>
+
+        <span class="muted" data-bind="text: guid"></span>
+    </div>
+    <div class="modal-body" id="player-stats">
+        <h4>Chat Log</h4>
+        <table class="table table-border text-center">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Audience</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: { data: messages }">
+                <tr data-bind="css: colorCode">
+                    <td data-bind="text: player"></td>
+                    <td data-bind="text: audience"></td>
+                    <td data-bind="text: message"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="player-chat-input">
+            <form onsubmit="return false;" class="form-horizontal" id="player-chat-form">
+                <input type="text" placeholder="Enter a message..." name="send-player-message" />
+                <button type="button" class="btn btn-info" id="send-player-chat" data-bind="click: function() { $root.chatMessages.sendChatFromPlayerForm(false) }" />Chat</button>
+                <button type="button" class="btn btn-warn" id="send-player-yell" data-bind="click: function() { $root.chatMessages.sendChatFromPlayerForm(true) }" />Yell</button>
+            </form>
+        </div>
+    </div>
+</div>

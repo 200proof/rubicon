@@ -21,16 +21,6 @@ class ScoreboardViewModel
         @hasNeutralPlayers = ko.computed ->
             self.neutralPlayers().players().length > 0
 
-        @currentModalUser = ko.observable()
-
-        @openUserModal = (user) ->
-            self.currentModalUser(user)
-            return
-
-        @closeUserModal = ->
-            self.currentModalUser(undefined)
-            return
-
         @highlightSquadmates = (player) ->
             $("#team-#{player.team().id()} .squad-#{player.squad()}").addClass("squad-highlight")
             return
