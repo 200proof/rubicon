@@ -11,15 +11,9 @@ module Rubicon::WebUI
         include Sinatra::SSE
 
         configure do
-            Compass.configuration do |config|
-                config.project_path = File.dirname(__FILE__)
-                config.sass_dir = 'views/stylesheets'
-            end
-
             @@active_sessions = {}
 
-            set :sass, Compass.sass_engine_options
-            set :scss, Compass.sass_engine_options
+            #set :sass_dir, "../"
             set :root, File.dirname(__FILE__)
 
             use Rack::Session::Cookie,
@@ -71,8 +65,39 @@ module Rubicon::WebUI
                 "<div id='#{id}'>\n" + messages.join + "</div>"
             end
 
+            # Defers rendering operations in asynchronous requests (i.e., aget, apost, etc.) to
+            # avoid blocking the reactor leading to deadlocks. (server.send_request is a blocking operation)
             def threaded_render (&block)
                 EventMachine.defer block, proc { |result| body result }
+            end
+
+            # Because we dont keep our stylesheets in views/ like good boys
+            def sass(template, *args)
+                template = :"../stylesheets/#{template}" if template.is_a? Symbol
+                super(template, *args)
+            end
+
+            # Recursively concatenates CoffeeScript files via a `#include "filename"` mechanism
+            #
+            # Basically a poor man's Sprockets
+            def concatenate_coffeescript(filename, already_included=[])
+                file_path = File.expand_path("#{filename}.coffee", "#{settings.root}/javascripts/")
+                file      = File.new(file_path, "r")
+                base_path = File.dirname(file.path)
+                contents  = file.read
+
+                already_included << file_path
+
+                contents.gsub(/\#include\s+"([^"]+)"/) do |match|
+                    full_include_path = File.expand_path($1, base_path)
+                    
+                    unless already_included.include? "#{full_include_path}.coffee"
+                        concatenate_coffeescript(full_include_path, already_included) 
+                    else
+                        Rubicon.logger("WebUI").warn "Already #include'd `#{full_include_path}.coffee`! (in #{filename}.coffee)"
+                        match
+                    end
+                end
             end
         end
 
@@ -89,14 +114,14 @@ module Rubicon::WebUI
 
         get "/stylesheets/:name.css" do
             content_type 'text/css', :charset => 'utf-8'
-            sass :"stylesheets/#{params[:name]}", Compass.sass_engine_options
+            sass params[:name].to_sym, Compass.sass_engine_options
         end
 
         get "/javascripts/:name.js" do
-            filename = params[:splat].first
+            filename = params[:name]
 
             content_type 'text/javascript', :charset => 'utf-8'
-            coffee :"javascripts/#{params[:name]}"
+            coffee concatenate_coffeescript(filename)
         end
 
         get "/login" do

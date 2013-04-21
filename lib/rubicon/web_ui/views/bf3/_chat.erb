@@ -36,7 +36,7 @@
                 <!-- /ko -->
             </optgroup>
         </select>
-        <button type="button" class="btn btn-info" />Chat</button>
-        <button type="button" class="btn btn-warn" />Yell</button>
+        <button type="button" class="btn btn-info" id="send-chat" data-bind="click: function() { $root.chatMessages.sendChatFromForm(false) }" />Chat</button>
+        <button type="button" class="btn btn-warn" id="send-yell" data-bind="click: function() { $root.chatMessages.sendChatFromForm(true) }" />Yell</button>
     </form>
 </div>

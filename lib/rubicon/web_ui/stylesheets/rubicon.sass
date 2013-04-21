@@ -27,9 +27,7 @@ footer p
     background-color: #fff
     border: 1px solid #e5e5e5
     +border-radius(5px)
-    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05)
-    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05)
-    box-shadow: 0 1px 2px rgba(0,0,0,.05)
+    +box-shadow(0 1px 2px rgba(0,0,0,.05))
 
 .form-signin .form-signin-heading, .form-signin .checkbox 
     margin-bottom: 10px
@@ -68,17 +66,25 @@ tr.squad-highlight:hover > td
     button
         width: 6.5%
 
+#player-chat-input
+    input[name=send-player-message]
+        width: 69.5%
+
+    button
+        width: 13%
+
 .reserved-slot-entry
-    width: 284px
+    width: 216px
     padding: 8px
     line-height: 21px
     border-top: 1px solid #ddd
     margin-left: 0
 
-.reserved-slot-entry:nth-of-type(3n+1)
-    padding-left: 68px
+.reserved-slot-entry:nth-of-type(4n+1)
+    padding-left: 40px
 
-.reserved-slot-entry:nth-of-type(6n+3), .reserved-slot-entry:nth-of-type(6n+2), .reserved-slot-entry:nth-of-type(6n+1)
+.reserved-slot-entry:nth-of-type(8n+4), .reserved-slot-entry:nth-of-type(8n+3),
+.reserved-slot-entry:nth-of-type(8n+2), .reserved-slot-entry:nth-of-type(8n+1)
     background-color: #f9f9f9
 
 .reserved-slot-entry:hover
@@ -91,3 +97,22 @@ input[name=new-slot-name]
     line-height: 14px
     padding: 0
     margin: 0
+
+// Make modal header's close buttons more aligned with Spacelab's <h3>
+.modal-header .close
+    line-height: 26px 
+
+#scoreboard-player-modal
+    #modal-name-and-actions 
+        #modal-player-name
+            display: inline-block
+
+        #modal-player-actions
+            float: right
+            display: inline-block
+            width: 24%
+            position: relative
+            top: 3px
+
+            button
+                width: 28%

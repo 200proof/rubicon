@@ -3,11 +3,11 @@
     <div class="span12 loading-row">Loading...</div>
     <div class="span12">
         <div id="reserved-list-entries" class="row">
-            <div class="span4 reserved-slot-entry new-slot">
-                <input type="text" name="new-slot-name" placeholder="Add a player" maxlength="16" class="player-name" />
+            <div class="span3 reserved-slot-entry" id="new-slot">
+                <input type="text" name="new-slot-name" placeholder="Type in a name and press enter..." maxlength="16" class="player-name" />
             </div>
             <!-- ko foreach: reservedList.entries -->
-                <div class="span4 reserved-slot-entry" data-bind="text: $data, click: function() { $root.reservedList.openRemoveModal($data) }">
+                <div class="span3 reserved-slot-entry" data-bind="text: $data, click: function() { $root.reservedList.openRemoveModal($data) }">
                 </div>
             <!-- /ko -->
         </div>

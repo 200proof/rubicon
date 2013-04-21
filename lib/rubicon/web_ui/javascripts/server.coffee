@@ -59,6 +59,12 @@ class ServerModel
             }
             window.ChatVM.addItem(msg)
 
+            audience_words = json.audience.split " "
+            if audience_words[0] == "player"
+                @players()[audience_words[1]].addChatMessage(msg)
+
+            # We should add the message to the per-player chat log, but not
+            # to the "Server" player (since we don't have one)
             return if json.player == "Server"
 
             @players()[json.player].addChatMessage(msg)
@@ -174,6 +180,7 @@ class LogViewModel
 
 class ChatViewModel
     constructor: ->
+        self = @
         @messages = ko.observableArray()
 
         @stickyAutoscroller = (forceScroll) ->
@@ -191,19 +198,42 @@ class ChatViewModel
             @messages.push(msg) 
             return
 
-        @sendChat = (yell) ->
+        @sendChat = (message, audience, yell) ->
             requestObject = 
-                message: $("input[name=message]").val(),
-                audience: $("select[name=audience]").val(),
+                message: message,
+                audience: audience
                 yell: yell
 
-            $("#chat-form :input").attr("disabled", true)
+            return if message == ""
+
+            $("#chat-form :input, input[name=send-player-message]").attr("disabled", true)
 
             $.post "#{window.APIPath}/say", requestObject, (response) ->
-                $("input[name=message]").val("")
-                $("#chat-form :input").attr("disabled", false)
+                $("input[name=message], input[name=send-player-message]").val("")
+                $("#chat-form :input, input[name=send-player-message]").attr("disabled", false)
+
+                if yell
+                    window.ServerState.addChatMessage
+                        "time": new Date(),
+                        "player": "Server",
+                        "audience": "#{audience} <YELL>",
+                        "colorCode": window.ChatVM.colorForAudience[audience],
+                        "message": message
+
 
             return
+
+        @sendChatFromForm = (yell) ->
+            message  = $("input[name=message]").val()
+            audience = $("select[name=audience]").val()
+            
+            self.sendChat message, audience, yell
+
+        @sendChatFromPlayerForm = (yell) ->
+            message  = $("input[name=send-player-message]").val()
+            audience = "player #{window.ScoreboardVM.currentModalUser().name()}"
+            
+            self.sendChat message, audience, yell
 
     # using bootstrap colors because #yolo
     colorForAudience: {
@@ -272,9 +302,11 @@ class ReservedListViewModel
         @entries = ko.observableArray([])
         @refreshEntries = ->
             self.entries([])
+            $("#reserved-list #new-slot").hide()
             $("#reserved-list .loading-row").show()
             $.getJSON "#{window.APIPath}/reserved-slots", (json) ->
                 $("#reserved-list .loading-row").hide()
+                $("#reserved-list #new-slot").show()
                 self.entries(json)
                 return
 
@@ -300,6 +332,8 @@ class ReservedListViewModel
 
         @addSlot = (inputField) ->
             name = inputField.value
+
+            return if name == ""
 
             $(inputField).attr "disabled", true
             $(inputField).val("Adding #{name}...")
@@ -370,10 +404,11 @@ $ ->
         "banList":      window.BanListVM,
         "reservedList": window.ReservedListVM
 
-    $(".loading-row").toggle()
-
     $("a[data-target=#log]").on "shown", ->
         window.LogVM.stickyAutoscroller(true)
+
+    $("a[data-target=#chat]").on "shown", ->
+        window.ChatVM.stickyAutoscroller(true)
 
     $("a[data-target=#ban-list]").on "shown", ->
         window.BanListVM.refreshEntries()
@@ -386,10 +421,13 @@ $ ->
 
     $("#chat-form > *").bind "keypress", (e) ->
         if (e.which == 13) # 13 == enter
-            if e.ctrlKey
-                window.ChatVM.sendChat true
-            else
-                window.ChatVM.sendChat false
+            window.ChatVM.sendChatFromForm(e.ctrlKey)
+
+        return true
+
+    $("#scoreboard-player-modal").on "keypress", "input[name=send-player-message]", (e) ->
+        if (e.which == 13) # 13 == enter
+            window.ChatVM.sendChatFromPlayerForm(e.ctrlKey)
 
         return true
 
