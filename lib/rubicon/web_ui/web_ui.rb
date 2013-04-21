@@ -26,20 +26,26 @@ module Rubicon::WebUI
         end
 
         helpers do
+            # The config set in the config file passed to Rubicon on startup
             def configuration
                 Rubicon.web_ui_config
             end
 
+            # Validates a user's credentials and logs them in if appropriate
             def authenticate_user!(username, password)
                 if configuration["users"].include? ({"name"=>username, "password"=>password})
                     flash[:success] = "Logged in successfully!"
                     session[:username] = username
                     @@active_sessions[session[:username]] = session[:session_id]
+
+                    current_user
                 else
                     flash[:error] = "Invalid username or password!"
+                    nil
                 end
             end
 
+            # Logs out a user
             def logout_user!
                 if current_user
                     @@active_sessions.delete session[:username]
@@ -48,6 +54,7 @@ module Rubicon::WebUI
                 end
             end
 
+            # Gets the current user's username if the user is logged in
             def current_user
                 if @@active_sessions[session[:username]] == session[:session_id]
                     session[:username]
@@ -56,6 +63,7 @@ module Rubicon::WebUI
                 end
             end
 
+            # Renders any messages in the session flash hash in a bootstrap-friendly manner
             def flash_messages(key=:flash)
                 return "" if flash(key).empty?
                 id = (key == :flash ? "flash" : "flash_#{key}")
@@ -90,7 +98,7 @@ module Rubicon::WebUI
 
                 contents.gsub(/\#include\s+"([^"]+)"/) do |match|
                     full_include_path = File.expand_path($1, base_path)
-                    
+
                     unless already_included.include? "#{full_include_path}.coffee"
                         concatenate_coffeescript(full_include_path, already_included) 
                     else
@@ -101,6 +109,7 @@ module Rubicon::WebUI
             end
         end
 
+        # Enforce login on non-assets and login page
         before "*" do
             path = params[:splat].first
             exempt = /^\/(login|stylesheets\/.+|javascripts\/.+|__sinatra__)/
