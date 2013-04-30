@@ -36,7 +36,7 @@ end
 
 apost "/:server_name/api/kill/:name" do
     if server = Rubicon.servers[params[:server_name]]
-        p name   = params[:name]
+        name   = params[:name]
         reason = params[:reason] || ""
 
         if name != "" && name.length < 17
