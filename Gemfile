@@ -3,7 +3,7 @@ source "https://rubygems.org"
 gem "eventmachine", "~> 1.0.3"
 
 # Thread goodies like message channels and promises
-gem "thread", "~> 0.0.4.2"
+gem "thread", "~> 0.0.6.2"
 
 # Web stuff
 gem "thin", "~> 1.5.1"

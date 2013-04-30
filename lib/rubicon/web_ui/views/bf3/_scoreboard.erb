@@ -57,7 +57,7 @@
                     <th>Name</th>
                 </thead>
                 <tbody data-bind="foreach: scoreboard.neutralPlayers().players">
-                    <tr class="player-row" data-bind="attr: { id: name }, click: function() { console.log($data.team().id()) }">
+                    <tr class="player-row" data-bind="attr: { id: name }">
                         <td class="rank-icon-cell"><i class="sprite" data-bind="css: 'sprite-rank-' + rank()"></i></td>
                         <td><span data-bind="text: name"></span></td>
                     </tr>

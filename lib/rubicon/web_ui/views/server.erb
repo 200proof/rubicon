@@ -1,6 +1,6 @@
 <script src="/javascripts/server.js"></script>
 <%= flash_messages %>
-<h1><%= server.name %></h1>
+<h1 id="server-name"><%= server.name %></h1>
 
 <ul class="nav nav-tabs" id="server-tabs">
   <li class="active"><a data-toggle="tab" data-target="#scoreboard"><i class="icon-group"></i>Scoreboard</a></li>
@@ -23,3 +23,8 @@
 </div>
 
 <%= erb :"#{server.class::GAME_NAME}/_player-modal" %>
+
+<div id="stream-error">
+  <h1>OH NOES</h1>
+  <p>There was an error communicating with Rubicon. Please refresh the page.</p>
+</div>

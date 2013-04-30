@@ -98,11 +98,25 @@ input[name=new-slot-name]
     padding: 0
     margin: 0
 
-// Make modal header's close buttons more aligned with Spacelab's <h3>
-.modal-header .close
-    line-height: 26px 
+#player-modal
+    #player-stats
+        min-height: 300px
 
-#scoreboard-player-modal
+    #modal-chat-table
+        max-height: 280px
+        display: block
+        overflow-x: scroll
+        margin-bottom: 8px
+
+    input[name=player-action-reason]
+        width: 97%
+
+    input[name=player-ban-timeout]
+        text-align: right
+
+    select[name=player-ban-timeout-factor]
+        height: 31px
+
     #modal-name-and-actions 
         #modal-player-name
             display: inline-block
@@ -110,9 +124,30 @@ input[name=new-slot-name]
         #modal-player-actions
             float: right
             display: inline-block
-            width: 24%
+            width: 28%
             position: relative
             top: 3px
 
             button
-                width: 28%
+                width: 27%
+
+            .close
+                width: 10%
+                margin-top: 0
+                line-height: 26px
+
+    #player-action-submodal-backdrop
+        position: absolute
+        top: -2px
+        height: 101%
+        +border-radius(3px)
+
+    #player-action-submodal-backdrop.in
+        opacity: 0.6
+
+#stream-error
+    top: 60px
+    left: 0px
+    width: 100%
+    height: 100%
+    display: none

@@ -149,7 +149,7 @@ module Rubicon::WebUI
 
                 redirect redirect_dest
             else
-                flash[:error] = "Invalid username or password!"
+                
                 status 401
                 erb :login
             end

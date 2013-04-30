@@ -72,6 +72,40 @@ class ServerModel
         @playerNames = ->
             Object.keys(self.players())
 
+        @sendChat = (message, audience, yell) ->
+            requestObject = 
+                message: message,
+                audience: audience
+                yell: yell
+
+            return if message == ""
+
+            self.lockInputs()
+            $.post "#{window.APIPath}/say", requestObject, (response) ->
+                self.unlockInputs(true)
+
+                if yell
+                    window.ServerState.addChatMessage
+                        "time": new Date(),
+                        "player": "Server",
+                        "audience": "#{audience} <YELL>",
+                        "colorCode": window.ChatVM.colorForAudience[audience],
+                        "message": message
+
+
+            return
+
+        @lockInputs = ->
+            $("#chat-form :input, input[name=send-player-message]").attr("disabled", true)
+            return
+
+        @unlockInputs = (clear=false) ->
+            $("#chat-form :input, input[name=send-player-message]").attr("disabled", false)
+            $("input[name=message], input[name=send-player-message]").val("") if clear
+            return
+
+
+
 class PlayerModel
     constructor: (json, team) ->
         @name     = ko.observable json.name

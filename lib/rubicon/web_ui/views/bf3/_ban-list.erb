@@ -14,7 +14,7 @@
             </tbody>
             <tbody data-bind="foreach: banList.entries">
                 <tr data-bind="click: function() { $root.banList.openBanModal($data) }">
-                    <td data-bind="text: id"></td>
+                    <td data-bind="text: friendly_id"></td>
                     <td data-bind="text: expires"></td>
                     <td data-bind="text: reason"></td>
                 </tr>

@@ -239,15 +239,16 @@ module Rubicon::Frostbite::BF3
         # Kicks `player_name`. If a reason is given, it is used instead of the
         # BF3 server's default of "Kicked by administrator."
         def kick_player(player_name, reason=nil)
-            if reason
-                send_command "admin.kickPlayer", player_name, reason
+            if reason && reason != ""
+                send_request("admin.kickPlayer", player_name, reason).read_word
             else
-                send_command "admin.kickPlayer", player_name
+                send_request("admin.kickPlayer", player_name).read_word
             end
         end
 
+        # Kills `player_name`.
         def kill_player(player_name)
-            send_command "admin.killPlayer", name
+            send_request("admin.killPlayer", player_name).read_word
         end
 
         # Bans a player from the server.
@@ -259,7 +260,7 @@ module Rubicon::Frostbite::BF3
         # `timeout_length`: When the ban expires. If this is 0, the ban will be permanent regardless of `timeout_type`
         #
         # Returns the server's response to the command.
-        def ban_player(id_type, id, reason="", timeout_type=:perm, timeout_length=0)
+        def ban_player(id_type, id, reason=nil, timeout_type=:perm, timeout_length=0)
             raise "id_type must be one of :name, :guid, or :ip" unless [:name, :guid, :ip].include? id_type
             raise "timeout_type must be one of :perm, :rounds, :seconds" unless [:perm, :rounds, :seconds].include? timeout_type
 
@@ -268,10 +269,10 @@ module Rubicon::Frostbite::BF3
                 timeout_words = [:perm]
             end
 
-            if reason != ""
-                send_request("banList.add", id_type, id, *timeout_words, reason).words.first
+            if reason && reason != ""
+                send_request("banList.add", id_type, id, *timeout_words, reason).read_word
             else
-                send_request("banList.add", id_type, id, *timeout_words).words.first
+                send_request("banList.add", id_type, id, *timeout_words).read_word
             end
         end
 
@@ -284,7 +285,7 @@ module Rubicon::Frostbite::BF3
         def unban_player(id_type, id)
             raise "id_type must be one of :name, :guid, or :ip" unless [:name, :guid, :ip].include? id_type
 
-            send_request("banList.remove", id_type, id).words.first
+            send_request("banList.remove", id_type, id).read_word
         end
 
         # Adds a player to the reserved slot list
@@ -296,7 +297,7 @@ module Rubicon::Frostbite::BF3
             packet = send_request("reservedSlotsList.add", name)
             send_request("reservedSlotsList.save")
 
-            packet
+            packet.read_word
         end
 
         # Removes a player from the reserved slots list
@@ -308,7 +309,7 @@ module Rubicon::Frostbite::BF3
             packet = send_request("reservedSlotsList.remove", name)
             send_request("reservedSlotsList.save")
 
-            packet
+            packet.read_word
         end
     end
 

@@ -42,17 +42,22 @@ setupSSE = (serverState, logVM) ->
         return
     , false
 
+    EventStream.onerror = ->
+        $("#server-name, #server-tabs, .tab-content").hide()
+        $("#stream-error").show()
+        return
+
 $ ->
     window.APIPath = "#{window.location.pathname}/api"
 
     window.ServerState    = new ServerModel()
-    window.LogVM          = new LogViewModel()
-    window.ChatVM         = new ChatViewModel()
-    window.ScoreboardVM   = new ScoreboardViewModel()
-    window.BanListVM      = new BanListViewModel()
-    window.ReservedListVM = new ReservedListViewModel()
 
-    window.PlayerModalVM  = new PlayerModalViewModel(window.ChatVM)
+    window.LogVM          = new LogViewModel()
+    window.ChatVM         = new ChatViewModel(window.ServerState)
+    window.ScoreboardVM   = new ScoreboardViewModel()
+    window.BanListVM      = new BanListViewModel(window.ServerState)
+    window.ReservedListVM = new ReservedListViewModel()
+    window.PlayerModalVM  = new PlayerModalViewModel(window.ServerState)
 
     setupSSE(window.ServerState, window.LogVM)
 

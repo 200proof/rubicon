@@ -6,10 +6,12 @@ class BanModel
             "guid": "GUID"
         }
 
-        @json = json
+        @json   = json
+        @id     = ko.observable json.id
+        @idType = ko.observable json.id_type
         @reason = ko.observable json.reason
 
-        @id = ko.computed ->
+        @friendly_id = ko.computed ->
             "#{prefixes[@json.id_type]}: #{@json.id}"
         , @
 
@@ -26,7 +28,7 @@ class BanModel
 
 
 class BanListViewModel
-    constructor: ->
+    constructor: (serverState) ->
         self = @
         @entries = ko.observableArray([])
         @refreshEntries = ->
@@ -47,9 +49,16 @@ class BanListViewModel
             return
 
         @removeBan = (ban) ->
-            console.log "Undo a ban here, yeah?"
-            console.log ban
-            self.closeBanModal()
+            serverState.lockInputs()
+            $.ajax
+                method: "DELETE",
+                url:    "#{window.APIPath}/ban-list/#{ban.idType()}/#{ban.id()}",
+                success: (response) ->
+                    serverState.unlockInputs(true)
+                    self.closeBanModal()
+                    self.refreshEntries()
+                    return
+
             return
 
         @hookEvents = ->

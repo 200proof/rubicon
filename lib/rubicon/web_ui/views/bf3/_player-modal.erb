@@ -1,41 +1,94 @@
-<div class="fade" data-bind="modal: playerModal.currentModalPlayer" id="scoreboard-player-modal">
+<div class="fade" data-bind="modal: playerModal.currentModalPlayer" id="player-modal" data-keyboard="false" tabindex="0">
     <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <div id="modal-name-and-actions">
             <h3 data-bind="text: name" id="modal-player-name"></h3>
             <div id="modal-player-actions">
-                <button class="btn btn-mini btn-inverse">Kill</button>
-                <button class="btn btn-mini btn-warning">Kick</button>
-                <button class="btn btn-mini btn-danger">Ban</button>
+                <button class="btn btn-mini btn-inverse" id="action-kill-player" data-bind="click: function() { $root.playerModal.openSubmodal('kill') }">Kill</button>
+                <button class="btn btn-mini btn-warning" id="action-kick-player" data-bind="click: function() { $root.playerModal.openSubmodal('kick') }">Kick</button>
+                <button class="btn btn-mini btn-danger"  id="action-ban-player"  data-bind="click: function() { $root.playerModal.openSubmodal('ban')  }">Ban</button>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
         </div>
 
         <span class="muted" data-bind="text: guid"></span>
     </div>
     <div class="modal-body" id="player-stats">
+        <div class="modal sub-modal hide" id="player-action-submodal">
+            <div class="modal-body" id="player-action-submodal-body">
+                <!-- ko if: $root.playerModal.currentSubmodalAction() == "ban" -->
+                    <div class="form-horizontal">
+                        <div class="control-group" id="player-ban-id-type-group">
+                            <label class="control-label" for="player-ban-id-type">Ban by</label>
+                            <div class="controls">
+                                <select name="player-ban-id-type" id="player-ban-id-type">
+                                    <option value="name" selected="true">Name</option>
+                                    <option value="guid">GUID</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-group" id="player-ban-is-permanent-group">
+                            <label class="control-label" for="player-ban-is-permanent">Permaban?</label>
+                            <div class="controls">
+                                <input type="checkbox" checked="true" name="player-ban-is-permanent" id="player-ban-is-permanent" />
+                            </div>
+                        </div>
+
+                        <div class="control-group hide" id="player-ban-timeout-group">
+                            <label class="control-label" for="player-ban-timeout">Expires in</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="number" class="input-small" name="player-ban-timeout" id="player-ban-timeout" value="1" />
+                                    <select class="add-on" name="player-ban-timeout-factor">
+                                        <option value="rounds">Rounds</option>
+                                        <option value="60">Minutes</option>
+                                        <option value="3600">Hours</option>
+                                        <option value="86400">Days</option>
+                                        <option value="604800">Weeks</option>
+                                        <option value="2419200">Months</option>
+                                        <option value="31449600">Years</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <!-- /ko -->
+                <input type="text" placeholder="Enter a reason (optional)" name="player-action-reason" />
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-bind="click: $root.playerModal.closeSubmodal">Cancel</button>
+                <button class="btn" id="player-action-commit" data-bind="
+                    click: function() { $root.playerModal.performSubmodalAction() }, 
+                    css:   $root.playerModal.actionCommitClass,
+                    text:  $root.playerModal.actionCommitText"></button>
+            </div>
+        </div>
         <h4>Chat Log</h4>
-        <table class="table table-border text-center">
-            <thead>
-                <tr>
-                    <th>Player</th>
-                    <th>Audience</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody data-bind="foreach: { data: messages }">
-                <tr data-bind="css: colorCode">
-                    <td data-bind="text: player"></td>
-                    <td data-bind="text: audience"></td>
-                    <td data-bind="text: message"></td>
-                </tr>
-            </tbody>
-        </table>
+        <div id="modal-chat-table">
+            <table class="table table-border text-center">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Audience</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: { data: messages, afterRender: $root.playerModal.stickyAutoscroller }">
+                    <tr data-bind="css: colorCode">
+                        <td data-bind="text: player"></td>
+                        <td data-bind="text: audience"></td>
+                        <td data-bind="text: message"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div id="player-chat-input">
             <form onsubmit="return false;" class="form-horizontal" id="player-chat-form">
                 <input type="text" placeholder="Enter a message..." name="send-player-message" />
-                <button type="button" class="btn btn-info" id="send-player-chat" data-bind="click: function() { $root.playerModal.sendChat(false) }" />Chat</button>
-                <button type="button" class="btn btn-warn" id="send-player-yell" data-bind="click: function() { $root.playerModal.sendChat(true) }" />Yell</button>
+                <button type="button" class="btn btn-info" id="send-player-chat" data-bind="click: function() { $root.playerModal.sendChat(false) }">Chat</button>
+                <button type="button" class="btn btn-warn" id="send-player-yell" data-bind="click: function() { $root.playerModal.sendChat(true) }">Yell</button>
             </form>
         </div>
+        <div class="modal-backdrop fade hide" id="player-action-submodal-backdrop"></div>
     </div>
 </div>
