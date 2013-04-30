@@ -41,7 +41,7 @@ footer p
 .scrollable-table-wrapper
     width: 100%
     height: 500px
-    overflow: scroll
+    overflow-y: scroll
 
 .scoreboard .rank-icon-cell
     width: 30px
@@ -105,11 +105,11 @@ input[name=new-slot-name]
     #modal-chat-table
         max-height: 280px
         display: block
-        overflow-x: scroll
+        overflow-y: scroll
         margin-bottom: 8px
 
     input[name=player-action-reason]
-        width: 97%
+        width: 392px
 
     input[name=player-ban-timeout]
         text-align: right
@@ -138,9 +138,8 @@ input[name=new-slot-name]
 
     #player-action-submodal-backdrop
         position: absolute
-        top: -2px
-        height: 101%
-        +border-radius(3px)
+        height: 100%
+        +border-radius(0 0 3px 3px)
 
     #player-action-submodal-backdrop.in
         opacity: 0.6
