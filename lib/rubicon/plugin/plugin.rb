@@ -124,8 +124,7 @@ module Rubicon
         # a hash whose value is set by the plugin manager. Any parameters which are not
         # expected to be passed to the event or command will return nil.
         def method_missing(method_name, *args, &block)
-            raise "#{method_name} is not a valid parameter for this event!" unless @current_args[method_name]
-            @current_args[method_name]
+            @current_args[method_name] or raise "#{method_name} is not a valid parameter for this event! (in plugin #{self.class.name})"
         end
 
         # This allows the plugin manager to set any accessible parameters just prior to calling

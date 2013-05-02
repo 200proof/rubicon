@@ -109,13 +109,17 @@ module Rubicon
                         type, *params = message
 
                         if type == :command
-                            command_name = params.shift
-                            plugin.current_args = params.shift
-                            plugin.send plugin.class.command_handlers[command_name]
+                            command_name = plugin.class.command_handlers[params.shift]
+                            if plugin.respond_to? command_name
+                                plugin.current_args = params.shift
+                                plugin.send command_name
+                            end
                         elsif type == :event
-                            event_name = params.shift
-                            plugin.current_args = params.shift
-                            plugin.send plugin.class.event_handlers[event_name]
+                            event_name = plugin.class.event_handlers[params.shift]
+                            if plugin.respond_to? event_name
+                                plugin.current_args = params.shift
+                                plugin.send event_name
+                            end
                         else
                             @logger.error { "#{type} is not a valid plugin message!" }
                         end
