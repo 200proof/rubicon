@@ -30,6 +30,22 @@ class Essentials < Rubicon::Plugin
         end
     end
 
+    command "say" do
+        if player.has_permission? "say"
+            server.say args.join(" ")
+        else
+            player.say("You do not have permission to chat as an admin.")
+        end
+    end
+
+    command "yell" do
+        if player.has_permission? "yell"
+            server.yell args.join(" ")
+        else
+            player.say("You do not have permission to yell.")
+        end
+    end
+
     command "yes" do
         if confirmation_params = @active_confirmations[player.name]
             confirmation_params[0].call(*confirmation_params[1])
@@ -44,6 +60,77 @@ class Essentials < Rubicon::Plugin
         else
             player.say "You have no active confirmations!"
         end
+    end
+
+    # Bans a player from the server by GUID
+    command "ban" do
+        if player.has_permission? "ban"
+            name = args.shift
+
+            match_name(name, *args) do |matched_name, *args|
+                guid = server.players[matched_name].guid
+
+                valid_timeout_given, timeout_args = try_parsing_timeout(args[0])
+                args.shift if valid_timeout_given
+
+                reason = args.join(" ")
+
+                logger.info("Banning #{matched_name} by GUID for #{timeout_args}: #{reason}")
+                reason.insert(0, "(#{matched_name}) ")
+
+                server.ban_player(:guid, guid, reason, *timeout_args)
+            end
+        else
+            player.say("You do not have permission to ban players.")
+        end
+    end
+
+    # Bans a player from the server by name
+    command "nban" do
+        if player.has_permission? "ban"
+            name = args.shift
+
+            match_name(name, *args) do |matched_name, *args|
+                valid_timeout_given, timeout_args = try_parsing_timeout(args[0])
+                args.shift if valid_timeout_given
+
+                reason = args.join(" ")
+
+                logger.info("Banning #{matched_name} by name for #{timeout_args}: #{reason}")
+
+                server.ban_player(:name, matched_name, reason, *timeout_args)
+            end
+        else
+            player.say("You do not have permission to ban players.")
+        end
+    end
+
+    def try_parsing_timeout(string)
+        valid_timeout_given = false
+        timeout             = 0
+
+        string.scan /([0-9]+)([A-z])/ do |match|
+            valid_timeout_given = true
+            factor, multiplier  = match
+            factor              = factor.to_i
+
+            case(multiplier)
+            when 'w'
+                timeout += (factor * 604800)
+            when 'd'
+                timeout += (factor * 86400)
+            when 'h'
+                timeout += (factor * 3600)
+            when 'm'
+                timeout += (factor * 60)
+            when 'r'
+                return [true, [:rounds, factor]]
+            else
+                return [false, [:perm, 0]]
+            end
+        end
+
+        return [valid_timeout_given, [:seconds, timeout]]
     end
 
     # Adapted from C# example at http://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
