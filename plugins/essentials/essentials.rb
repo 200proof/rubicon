@@ -12,6 +12,7 @@ class Essentials < Rubicon::Plugin
             entered_name = args.shift
             match_name(entered_name) do |name|
                 server.kill_player(name)
+                logger.info("#{player.name} has admin killed #{name}")
             end
         else
             player.say "You do no have permission to kill players."
@@ -24,6 +25,7 @@ class Essentials < Rubicon::Plugin
 
             match_name(entered_name, args.join(" ")) do |name, reason|
                 server.kick_player(name, reason)
+                logger.info("#{player.name} has kicked #{name}: #{reason == "" ? "<no reason given>" : reason}")
             end
         else
             player.say("You do not have permission to kick players.")
@@ -32,7 +34,10 @@ class Essentials < Rubicon::Plugin
 
     command "say" do
         if player.has_permission? "say"
-            server.say args.join(" ")
+            message = args.join(" ")
+
+            server.say(message)
+            logger.info("#{player.name} <admin chat>: #{message}")
         else
             player.say("You do not have permission to chat as an admin.")
         end
@@ -40,7 +45,9 @@ class Essentials < Rubicon::Plugin
 
     command "yell" do
         if player.has_permission? "yell"
-            server.yell args.join(" ")
+            message = args.join(" ")
+            server.yell(message)
+            logger.info("#{player.name} <admin yell>: #{message}")
         else
             player.say("You do not have permission to yell.")
         end
@@ -49,16 +56,12 @@ class Essentials < Rubicon::Plugin
     command "yes" do
         if confirmation_params = @active_confirmations[player.name]
             confirmation_params[0].call(*confirmation_params[1])
-        else
-            player.say "You have no active confirmations!"
         end
     end
 
     command "no" do
         if @active_confirmations[player.name]
             @active_confirmations.delete(player.name)
-        else
-            player.say "You have no active confirmations!"
         end
     end
 
@@ -75,10 +78,10 @@ class Essentials < Rubicon::Plugin
 
                 reason = args.join(" ")
 
-                logger.info("Banning #{matched_name} by GUID for #{timeout_args}: #{reason}")
                 reason.insert(0, "(#{matched_name}) ")
-
                 server.ban_player(:guid, guid, reason, *timeout_args)
+
+                logger.info("#{player.name} banned #{matched_name} by GUID for #{timeout_args}: #{reason}")
             end
         else
             player.say("You do not have permission to ban players.")
@@ -96,9 +99,8 @@ class Essentials < Rubicon::Plugin
 
                 reason = args.join(" ")
 
-                logger.info("Banning #{matched_name} by name for #{timeout_args}: #{reason}")
-
                 server.ban_player(:name, matched_name, reason, *timeout_args)
+                logger.info("#{player.name} banned #{matched_name} by name for #{timeout_args}: #{reason}")
             end
         else
             player.say("You do not have permission to ban players.")
