@@ -1,5 +1,7 @@
 module Rubicon::Frostbite::BF3
     class Server
+        COMMAND_PREFIXES = ['/', '!', '@']
+
         @@event_handlers = {}
         def self.event(sig, &block)
             @@event_handlers[sig] = block
@@ -45,11 +47,13 @@ module Rubicon::Frostbite::BF3
             server.push_to_web_streams "chat", { time: Time.now.to_s, player: player.name, message: message, audience: audience }
             next if player.name == "Server"
 
-            if message[0] == "/"
-                split_up = message.split " "
-                command = split_up.shift
-                command[0] = '' # remove the /
-                args = { player: player, args: split_up}
+            if COMMAND_PREFIXES.include? message[0]
+                split_up     = message.split " "
+                command      = split_up.shift
+                trigger_char = command[0]
+
+                command[0] = '' # remove the trigger char
+                args = { player: player, args: split_up, trigger: trigger_char }
                 server.logger.event(:command) { "[CMND] <#{player.name}> #{message}" }
                 server.plugin_manager.dispatch_command(command, args)
             else

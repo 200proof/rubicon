@@ -135,7 +135,7 @@ module Rubicon::Frostbite::BF3
             send_command("admin.say", msg, "all")
         end
 
-        def yell(message, duration=20)
+        def yell(msg, duration=20)
             send_command("admin.yell", msg, duration, "all")
         end
 

@@ -12,6 +12,7 @@ class Essentials < Rubicon::Plugin
             entered_name = args.shift
             match_name(entered_name) do |name|
                 server.kill_player(name)
+                server.say("Killing #{name}.")
                 logger.info("#{player.name} has admin killed #{name}")
             end
         else
@@ -25,7 +26,9 @@ class Essentials < Rubicon::Plugin
 
             match_name(entered_name, args.join(" ")) do |name, reason|
                 server.kick_player(name, reason)
-                logger.info("#{player.name} has kicked #{name}: #{reason == "" ? "<no reason given>" : reason}")
+                reason_str = (reason == "" ? "<no reason given>" : reason)
+                server.say("Kicking #{name}: #{reason_str}")
+                logger.info("#{player.name} has kicked #{name}: #{reason_str}")
             end
         else
             player.say("You do not have permission to kick players.")
@@ -53,6 +56,14 @@ class Essentials < Rubicon::Plugin
         end
     end
 
+    command "raw" do
+        if player.has_permission? "raw"
+            player.say(server.send_request(*args).inspect)
+        else
+            player.say "You do not have permission to execute raw commands"
+        end
+    end
+
     command "yes" do
         if confirmation_params = @active_confirmations[player.name]
             confirmation_params[0].call(*confirmation_params[1])
@@ -77,11 +88,12 @@ class Essentials < Rubicon::Plugin
                 args.shift if valid_timeout_given
 
                 reason = args.join(" ")
+                reason_str = (reason == "" ? "<no reason given>" : reason)
 
-                reason.insert(0, "(#{matched_name}) ")
+                reason.prepend("(#{matched_name}) ")
                 server.ban_player(:guid, guid, reason, *timeout_args)
-
-                logger.info("#{player.name} banned #{matched_name} by GUID for #{timeout_args}: #{reason}")
+                server.say("Banning #{matched_name}: #{reason_str}")
+                logger.info("#{player.name} banned #{matched_name} by GUID for #{timeout_args}: #{reason_str}")
             end
         else
             player.say("You do not have permission to ban players.")
@@ -98,9 +110,11 @@ class Essentials < Rubicon::Plugin
                 args.shift if valid_timeout_given
 
                 reason = args.join(" ")
+                reason_str = (reason == "" ? "<no reason given>" : reason)
 
                 server.ban_player(:name, matched_name, reason, *timeout_args)
-                logger.info("#{player.name} banned #{matched_name} by name for #{timeout_args}: #{reason}")
+                server.say("Banning #{matched_name}: #{reason_str}")
+                logger.info("#{player.name} banned #{matched_name} by name for #{timeout_args}: #{reason_str}")
             end
         else
             player.say("You do not have permission to ban players.")
