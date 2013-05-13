@@ -174,8 +174,8 @@ module Rubicon::Frostbite::BF3
 
         def alive?
             alive_packet = @server.send_request("player.isAlive", @name)
-            if ping_packet.read_word == "OK"
-                ping_packet.read_bool
+            if alive_packet.read_word == "OK"
+                alive_packet.read_bool
             else
                 true
             end
