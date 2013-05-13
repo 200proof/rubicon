@@ -43,12 +43,13 @@ class TKPunish < Rubicon::Plugin
     command "forgive" do; forgive; end
     command "f"       do; forgive; end
 
-    def perform_or_queue_punish(killer)
+    def perform_or_queue_punish(killer, victim)
         if killer.alive?
             killer.kill
             server.say "#{killer.name} has been punished for team killing."
         else
-            @queued_punishes.push "#{killer.name}"
+            victim.say "#{killer.name} is dead and will be punished on their next spawn."
+            @queued_punishes.push killer.name
         end
     end
 
@@ -61,12 +62,12 @@ class TKPunish < Rubicon::Plugin
             if killer = server.players[killer_name]
                 if killer.has_permission? "tkpunish_exempt"
                     if victim.has_permission? "tkpunish_override"
-                        perform_or_queue_punish killer
+                        perform_or_queue_punish killer, victim
                     else
                         server.say "You cannot punish #{killer_name} as they are immune from punishing."
                     end
                 else
-                    perform_or_queue_punish killer
+                    perform_or_queue_punish killer, victim
                 end
             else
                 player.say "You cannot punish #{killer_name} as they are no longer on the server."
