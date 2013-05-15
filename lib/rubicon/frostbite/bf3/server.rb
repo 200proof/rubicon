@@ -85,7 +85,6 @@ module Rubicon::Frostbite::BF3
         def start_event_pump
             while message = @connection.message_channel.receive
                 command, *args = message
-                p args if command == :test
                 if (command.is_a? Rubicon::Frostbite::RconPacket)
                     process_event(command)
                 elsif (command.is_a? Symbol)
