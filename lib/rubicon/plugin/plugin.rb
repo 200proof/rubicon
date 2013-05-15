@@ -1,26 +1,27 @@
 module Rubicon
     class Plugin
-        @@event_method_names = {}
-        @@command_method_names = {}
         def self.inherited(base)
             PluginManager.loaded_plugins[base.name] = base
             Rubicon.logger("Plugin").debug { "Loaded plugin #{base.name} "}
+
+            base.instance_variable_set :@event_method_names, {}
+            base.instance_variable_set :@command_method_names, {}
         end
 
         def self.event_method_name(event_name)
-            @@event_method_names[event_name] ||= "event_#{event_name}".downcase.gsub(/\./, "_").to_sym
+            @event_method_names[event_name] ||= "event_#{event_name}".downcase.gsub(/\./, "_").to_sym
         end
 
         def self.command_method_name(command_name)
-            @@command_method_names[command_name] ||= "command_#{command_name}".downcase.gsub(/\./, "_").to_sym
+            @command_method_names[command_name] ||= "command_#{command_name}".downcase.gsub(/\./, "_").to_sym
         end
 
         def self.event_handlers
-            @@event_method_names
+            @event_method_names
         end
 
         def self.command_handlers
-            @@command_method_names
+            @command_method_names
         end
 
         # Provides a DSL for responding to server events such as players joining, chat messages
