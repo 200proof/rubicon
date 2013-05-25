@@ -13,7 +13,7 @@ module Rubicon::Frostbite::BF3
             elsif other == :aa_missile
                 return [:stinger, :igla].include? @symbol
             else
-                @sym == other
+                @symbol == other
             end
         end
 
