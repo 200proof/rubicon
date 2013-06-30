@@ -113,10 +113,11 @@ module Rubicon::Frostbite::BF3
         "Taurus .44"                        => Weapon.new(:magnum44),
         "Weapons/MP412Rex/MP412REX"         => Weapon.new(:mp412rex),
         "Weapons/MP443/MP443"               => Weapon.new(:mp443),
-        "Death"                             => Weapon.new(:death), # this is the generic death that the game falls back to, shows up as KILLED
+        "Death"                             => Weapon.new(:death),    # this is the generic death that the game falls back to, shows up as KILLED
         "Suicide"                           => Weapon.new(:suicide),
         "SoldierCollision"                  => Weapon.new(:pancakes), # no.. this will not be changed
-        "DamageArea"                        => Weapon.new(:crispy) # Standing in fire
+        "DamageArea"                        => Weapon.new(:crispy)    # Standing in fire
+        "RoadKill"                          => Weapon.new(:roadkill)
     }
     WEAPONS.default_proc = proc do |hash, key|
         Rubicon.logger("Weapons").warn ("Unknown weapon #{key}. Defaulting to :bad_luck")
@@ -212,6 +213,7 @@ module Rubicon::Frostbite::BF3
         suicide:            "Suicide",
         bad_luck:           "Bad Luck",
         pancakes:           "Terminal Deceleration",
-        crispy:             "Burned to a crisp"
+        crispy:             "Burned to a crisp",
+        roadkill:           "Roadkill"
     }
 end
