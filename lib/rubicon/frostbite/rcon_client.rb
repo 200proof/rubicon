@@ -121,18 +121,17 @@ module Rubicon::Frostbite
                 buffer_idx = 0
 
                 # 4th byte contains the origin flag and request/response flag
-                # reset it directly in the buffer so we can splat out the actual sequence number later
                 origin = ((@buffer[3] & (1 << 7)) == 0) ? :client : :server
                 type = ((@buffer[3] & (1 << 6)) == 0) ? :request : :response
-
-                # clear origin and isResponse bits
-                @buffer[3] &= 0b00111111
 
                 # get all the header info in one fell splat
                 # (packing 12 unsigned char8s into 3 unsigned little-endian int32s)
                 sequence, total_size, word_count = @buffer[0, 12].pack('C'*12).unpack('V'*3)
 
                 buffer_idx += 12
+
+                # clear origin and isResponse bits from sequence
+                sequence &= 0b00111111
 
                 # no point reading on if we cant finish the packet
                 break if @buffer.length < total_size
